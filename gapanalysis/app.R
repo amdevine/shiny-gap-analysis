@@ -3,32 +3,44 @@ library(shiny)
 # Load the Catalogue of Life data frame
 col <- read.csv('col.csv', stringsAsFactors = FALSE)
 
+# User interface
 ui <- fluidPage(
     titlePanel('GGI Gap Analysis Tool'),
     p('This app is used to conduct gap analyses for GGI funded projects.'),
-    br(),
     sidebarLayout(
         sidebarPanel(
             h4('Upload Names List'),
-            fileInput('file.names', 'Names to analyze'),
+            fileInput('inp.names', 'Names to analyze'),
             h4('Optional Settings'),
             selectInput(
-                'select.tax', 
+                'inp.taxlevel', 
                 'Select taxonomic level', 
-                c('Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species')
+                c('Kingdom' = 'kin', 
+                  'Phylum/Division' = 'phy', 
+                  'Class' = 'cla', 
+                  'Order' = 'ord', 
+                  'Family' = 'fam', 
+                  'Genus' = 'gen')
                 ),
             selectInput(
-                'select.king', 
+                'inp.kingdom', 
                 'Select kingdom', 
-                c('Animalia', 'Plantae', 'Fungi', 'Chromista', 'Protozoa', 'Bacteria', 'Viruses')
+                c('Animalia' = 'ani', 
+                  'Plantae' = 'pla', 
+                  'Fungi' = 'fun', 
+                  'Chromista' = 'chr', 
+                  'Protozoa' = 'pro', 
+                  'Bacteria' = 'bac', 
+                  'Viruses' = 'vir')
                 )
             ),
         mainPanel(
             h2('Venn Diagram Results'),
-            p('Insert pretty figure here', style = 'color: gray;'),
+            actionButton('dl.fig', 'Download Venn Diagram'),
+            plotOutput('venn.diagram'),
             h2('List Results'),
-            p('Download button', style = 'color: gray;'),
-            p('Insert table here', style = 'color: gray;')
+            actionButton('dl.table', 'Download Results Table'),
+            tableOutput('results.table')
             )
     )
 )
