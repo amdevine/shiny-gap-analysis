@@ -1,13 +1,13 @@
-library(shiny)
-library(eulerr)
+# library(eulerr)
 library(dplyr)
-library(ggplot2)
+# library(ggplot2)
+library(rdrop2)
+library(shiny)
 library(tidyr)
-eulerr_options(pointsize = 12)
-options(digits = 4)
 
-# Load the Catalogue of Life data frame
-col <- read.csv('col.csv', stringsAsFactors = FALSE)
+# Load data from Dropbox
+token <- readRDS('dropbox_token.rds')
+col <- drop_read_csv('shiny/col.csv', dtoken = token, stringsAsFactors = FALSE)
 
 # User interface
 ui <- fluidPage(
@@ -15,7 +15,7 @@ ui <- fluidPage(
     p('This app is used to conduct gap analyses for GGI funded projects.'),
     sidebarLayout(
         sidebarPanel(
-            numericInput('inp.test', 'Test Numeric Input', 20, min = 10, max = 30),
+            # numericInput('inp.test', 'Test Numeric Input', 20, min = 10, max = 30),
             h4('Upload Names List'),
             fileInput('upl.names', 'Names to analyze'),
             textAreaInput(
@@ -23,58 +23,79 @@ ui <- fluidPage(
                 'or Paste list of names here',
                 placeholder = 'Paste one name per row',
                 width = '200px',
-                height = '200px'
-                ),
+                height = '100px'
+            ),
             h4('Optional Settings'),
             selectInput(
                 'inp.taxlevel', 
                 'Select taxonomic level', 
                 c(
-                    # 'All' = 'All', 
+                    'All',
                     unique(col$taxRank)
-                )),
+                ),
+                width = '200px'
+            ),
             selectInput(
                 'inp.kingdom', 
                 'Select kingdom', 
                 c(
-                    # 'All' = 'All', 
+                    'All',
                     unique(col$kingdom)
-                ))
-            ),
+                ),
+                width = '200px'
+            )
+        ),
         mainPanel(
-            h2('Venn Diagram Results'),
-            actionButton('dl.fig', 'Download Venn Diagram'),
+            h2('Results'),
+            actionButton('dl.fig', 'Download Diagram'),
+            actionButton('toggle.graph', 'Toggle Graph Type'),
             plotOutput('venn.diagram'),
             h2('List Results'),
             actionButton('dl.table', 'Download Results Table'),
             tableOutput('results.table')
-            )
+        )
     )
 )
 
 
 server <- function(input, output) {
     
-    output$venn.diagram <- renderPlot({
-        coldata <- col %>%
-            filter(taxRank == input$inp.taxlevel,
-                   kingdom == input$inp.kingdom) %>%
-            select(kingdom, phylum, classis, ordo, family, genus) %>%
-            gather('trank', 'tname')
-        print(coldata)
-            # distinct() %>%
-            # filter(!is.na(tname))
-            # group_by(trank) %>%
-            # count(tname)
-        plot(coldata)  
-            
-        # plot(euler(c(
-        #     "GGBN" = input$inp.test, "GenBank" = 5, "GBIF" = 5,
-        #     "GGBN&GenBank" = 5, "GGBN&GBIF" = 5, "GenBank&GBIF" = 3,
-        #     "GGBN&GenBank&GBIF" = 3
-        #     )))
+    filtered.data <- reactive({
+        if (input$inp.taxlevel == 'All' && input$inp.kingdom == 'All') {
+            c <- col
+        } else if (input$inp.taxlevel == 'All' && input$inp.kingdom != 'All') {
+            c <- filter(col, kingdom == input$inp.kingdom)
+        } else if (input$inp.taxlevel != 'All' && input$inp.kingdom == 'All') {
+            c <- filter(col, taxRank == input$inp.taxlevel)
+        } else {
+            c <- filter(col, taxRank == input$inp.taxlevel, kingdom == input$inp.kingdom)
+        }
+        c %>% select(kingdom, phylum, classis, ordo, family, genus) %>% print()
     })
     
+    output$venn.diagram <- renderPlot({
+
+        coldata <- filtered.data() %>% 
+            gather(key = "rnk", value = "txnm", kingdom, phylum, classis, ordo, family, genus) %>%
+            filter(txnm != '') %>%
+            group_by(rnk) %>%
+            summarise(n.names = n_distinct(txnm))
+
+        colcounts = summarise(coldata, n.names = n_distinct(txnm))
+        # if (input$toggle.graph %% 2 == 0) {
+        # barplot(coldata$txnm)
+        # } else {
+        pie(colcounts$n.names, labels = colcounts$rnk)
+        # }
+
+    })
+    
+    output$results.table <- renderTable({
+        coltable <- filtered.data()
+        colnames(coltable) <- c('Kingdom', 'Phylum/Division', 'Class', 'Order', 'Family', 'Genus')
+        head(coltable, 10)
+    })
+
 }
 
 shinyApp(ui = ui, server = server)

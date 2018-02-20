@@ -1,7 +1,8 @@
 .Rproj.user
 .Rhistory
 .RData
-.Ruserdata
 *.Rproj
+.Ruserdata
 gapanalysis/col.csv
-
+.httr-oauth
+*dropbox_token.rds
