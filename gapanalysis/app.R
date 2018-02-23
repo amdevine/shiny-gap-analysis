@@ -8,6 +8,12 @@ library(tidyr)
 # Load data from Dropbox
 token <- readRDS('dropbox_token.rds')
 col <- drop_read_csv('shiny/col.csv', dtoken = token, stringsAsFactors = FALSE)
+ggbn <- drop_read_csv('shiny/ggbn.csv', dtoken = token, stringsAsFactors = FALSE)
+genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token, stringsAsFactors = FALSE)
+
+get.tax.names <- function(df) {
+    
+}
 
 # User interface
 ui <- fluidPage(
@@ -76,16 +82,15 @@ server <- function(input, output) {
     output$venn.diagram <- renderPlot({
 
         coldata <- filtered.data() %>% 
-            gather(key = "rnk", value = "txnm", kingdom, phylum, classis, ordo, family, genus) %>%
+            gather(key = rnk, value = txnm, kingdom, phylum, classis, ordo, family, genus) %>%
             filter(txnm != '') %>%
             group_by(rnk) %>%
             summarise(n.names = n_distinct(txnm))
 
-        colcounts = summarise(coldata, n.names = n_distinct(txnm))
         # if (input$toggle.graph %% 2 == 0) {
         # barplot(coldata$txnm)
         # } else {
-        pie(colcounts$n.names, labels = colcounts$rnk)
+        pie(coldata$n.names, labels = coldata$rnk)
         # }
 
     })
