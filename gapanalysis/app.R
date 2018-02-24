@@ -108,6 +108,11 @@ server <- function(input, output) {
                      'Quillajaceae', 'Rosaceae', 'Sapindaceae', 'Taxaceae',
                      'Urticaceae', 'Violaceae', 'Woodsiaceae', 'Xanthorrhoeaceae',
                      'Zingiberaceae'))
+        } else if ( input$inp.name.list == 'test data' ) {
+            return(c(
+                'Animalia', 'Arthropoda', 'Aves', 'Artiodactyla', 'Agamidae', 'Apis',
+                'Plantae', 'Pteridophyta', 'Polypodiopsida', 'Poales', 'Poaceae', 'Poa',
+                'Fungi', 'Basidiomycota', 'Agaricomycetes', 'Agaricales', 'Agaricaceae', 'Calvatia'))
         } else if ( is.null(input$inp.name.file) && !is.null(input$inp.name.list) ) {
             return(strsplit(input$inp.name.list, "\n"))
         }
@@ -136,7 +141,6 @@ server <- function(input, output) {
         }
         query.df <- data.frame(query.names())
         colnames(query.df) <- c('qn')
-        
         query.df$ggbn <- query.df$qn %in% filtered()$ggbn$name
         query.df$genbank <- query.df$qn %in% filtered()$genbank$name
         colnames(query.df) <- c('Query Name', 'In GGBN', 'In GenBank')
