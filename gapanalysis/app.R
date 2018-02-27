@@ -31,17 +31,19 @@ ui <- fluidPage(
     p('This app is used to conduct gap analyses for GGI funded projects.'),
     sidebarLayout(
         sidebarPanel(
-            h4('Input Names for Analysis'),
+            width = 3,
+            h3('Input Names'),
             textInput('list.name', 'Dataset label', value = "User Data"),
             fileInput('inp.name.file', 'Upload list of names'),
             textAreaInput(
                 'inp.name.list', 
                 'OR enter list of names',
                 placeholder = 'One name per row',
-                width = '200px',
+                # width = '150px',
                 height = '100px'
             ),
             selectInput(
+                # width = '200px,',
                 'inp.taxlevel', 
                 'Taxonomic level of names', 
                 c(
@@ -52,17 +54,16 @@ ui <- fluidPage(
                     'Order' = 'order',
                     'Family' = 'family',
                     'Genus' = 'genus'
-                ),
-                width = '200px'
+                )
             ),
             selectInput(
+                # width = '200px',
                 'inp.kingdom', 
                 'Kingdom of names', 
                 c(
                     'Not Specified' = 'All',
                     sort(unique(gbif$kingdom))
-                ),
-                width = '200px'
+                )
             ),
             actionButton('analyze', 'Run Analysis')
         ),
@@ -70,7 +71,13 @@ ui <- fluidPage(
             h3('Results'),
             # actionButton('dl.fig', 'Download Diagram'),
             # actionButton('toggle.graph', 'Toggle Graph Type'),
-            plotOutput('venn.diagram', height = "50%"),
+            tabsetPanel(type = 'tabs',
+                        tabPanel("Phyla", plotOutput('venn.phyla')),
+                        tabPanel("Classes", plotOutput('venn.classes')),
+                        tabPanel("Orders", plotOutput('venn.orders')),
+                        tabPanel("Families", plotOutput('venn.families')),
+                        tabPanel("Genera", plotOutput('venn.genera'))),
+            # plotOutput('venn.diagram'),
             h3('Results Table'),
             downloadButton('dl.table', 'Download Results Table', style = "margin-bottom:1em"),
             div(tableOutput('results.table'), style = "font-size:80%")
@@ -132,7 +139,6 @@ server <- function(input, output) {
     
     results.df <- reactive({
         query.df <- data.frame(query.names())
-        print(query.df)
         colnames(query.df) <- c('submitted_name')
         gbif.results <- filtered()$gbif %>% filter(name %in% query.df$submitted_name)
         query.df <- query.df %>% 
@@ -156,23 +162,34 @@ server <- function(input, output) {
                            family_genbank, genus_genbank)
     })
     
-    # output$venn.diagram <- renderPlot({
-
-        # coldata <- filtered.col() %>% 
-        #     gather(key = rnk, value = txnm, kingdom, phylum, classis, ordo, family, genus) %>%
-        #     filter(txnm != '') %>%
-        #     group_by(rnk) %>%
-        #     summarise(n.names = n_distinct(txnm))
-        # 
-        # # if (input$toggle.graph %% 2 == 0) {
-        # # barplot(coldata$txnm)
-        # # } else {
-        # pie(coldata$n.names, labels = coldata$rnk)
-        # # }
-    #     return()
-    # 
-    # })
+    graph.label <- eventReactive(input$analyze, {return(input$list.name)})
     
+    output$venn.phyla <- renderPlot({
+        hist(rnorm(100, mean = 10, sd = 1), 
+             main = paste(graph.label(), '- Phyla', sep = " "),
+             xlab = 'Phyla')
+    })
+    output$venn.classes <- renderPlot({
+        hist(rnorm(100, mean = 20, sd = 1), 
+             main = paste(graph.label(), '- Classes', sep = " "),
+             xlab = 'Classes')
+    })
+    output$venn.orders <- renderPlot({
+        hist(rnorm(100, mean = 30, sd = 1), 
+             main = paste(graph.label(), '- Orders', sep = " "),
+             xlab = 'Orders')
+    })
+    output$venn.families <- renderPlot({
+        hist(rnorm(100, mean = 40, sd = 1), 
+             main = paste(graph.label(), '- Families', sep = " "),
+             xlab = 'Families')
+    })
+    output$venn.genera <- renderPlot({
+        hist(rnorm(100, mean = 50, sd = 1), 
+             main = paste(graph.label(), '- Genera', sep = " "),
+             xlab = 'Genera')
+    })
+
     output$results.table <- renderTable({
         table.data <- results.df() %>%
                       mutate(in_ggbn = ifelse(is.na(phylum_ggbn), "No", "Yes")) %>%
