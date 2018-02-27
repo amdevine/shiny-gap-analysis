@@ -31,7 +31,6 @@ ui <- fluidPage(
     p('This app is used to conduct gap analyses for GGI funded projects.'),
     sidebarLayout(
         sidebarPanel(
-            # numericInput('inp.test', 'Test Numeric Input', 20, min = 10, max = 30),
             h4('Input Names for Analysis'),
             textInput('list.name', 'Dataset label', value = "User Data"),
             fileInput('inp.name.file', 'Upload list of names'),
@@ -68,15 +67,17 @@ ui <- fluidPage(
             actionButton('analyze', 'Run Analysis')
         ),
         mainPanel(
-            # h2('Results'),
+            h3('Results'),
             # actionButton('dl.fig', 'Download Diagram'),
             # actionButton('toggle.graph', 'Toggle Graph Type'),
-            # plotOutput('venn.diagram'),
-            h2('List Results'),
-            downloadButton('dl.table', 'Download Results Table'),
+            plotOutput('venn.diagram', height = "50%"),
+            h3('Results Table'),
+            downloadButton('dl.table', 'Download Results Table', style = "margin-bottom:1em"),
             div(tableOutput('results.table'), style = "font-size:80%")
         )
-    )
+    ),
+    p('For assistance with this application, please contact ggi@globalgeno.me.',
+      style = "margin-bottom:3em")
 )
 
 
@@ -122,7 +123,8 @@ server <- function(input, output) {
                 'Plantae', 'Pteridophyta', 'Polypodiopsida', 'Poales', 'Poaceae', 'Poa',
                 'Fungi', 'Basidiomycota', 'Agaricomycetes', 'Agaricales', 'Agaricaceae', 'Calvatia'))
         } else if (!is.null(input$inp.name.file)) {
-            
+            infile <- read.table(input$inp.name.file$datapath, sep = "\n", stringsAsFactors = FALSE)
+            return(as.character(infile[,1]))
         } else if ( is.null(input$inp.name.file) && !is.null(input$inp.name.list) ) {
             return(strsplit(input$inp.name.list, "\n"))
         }
@@ -130,6 +132,7 @@ server <- function(input, output) {
     
     results.df <- reactive({
         query.df <- data.frame(query.names())
+        print(query.df)
         colnames(query.df) <- c('submitted_name')
         gbif.results <- filtered()$gbif %>% filter(name %in% query.df$submitted_name)
         query.df <- query.df %>% 
@@ -191,7 +194,7 @@ server <- function(input, output) {
                              'In GGBN' = in_ggbn,
                              'In GenBank' = in_genbank)
         if (nrow(table.data) > 100) {
-            return(table.data[100,])
+            return(table.data[1:100,])
         } else {
             return(table.data)
         }
