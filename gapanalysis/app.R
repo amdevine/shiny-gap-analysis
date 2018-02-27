@@ -4,17 +4,24 @@ library(dplyr)
 library(rdrop2)
 library(shiny)
 library(tidyr)
+# library(VennDiagram)
 
 # Load data from Dropbox
 token <- readRDS('dropbox_token.rds')
 
-gbif <- drop_read_csv('shiny/gbif.csv', dtoken = token, stringsAsFactors = FALSE)
+# CHANGE FOR DEPLOYMENT
+# gbif <- drop_read_csv('shiny/gbif.csv', dtoken = token, stringsAsFactors = FALSE)
+gbif <- read.csv('gbif.csv', stringsAsFactors = FALSE)
 
-ggbn <- drop_read_csv('shiny/ggbn.csv', dtoken = token, stringsAsFactors = FALSE)
+# CHANGE FOR DEPLOYMENT
+# ggbn <- drop_read_csv('shiny/ggbn.csv', dtoken = token, stringsAsFactors = FALSE)
+ggbn <- read.csv('ggbn.csv', stringsAsFactors = FALSE)
 ggbn <- ggbn[, -1]
 ggbn$rank <- tolower(ggbn$rank)
 
-genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token, stringsAsFactors = FALSE)
+# CHANGE FOR DEPLOYMENT
+# genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token, stringsAsFactors = FALSE)
+genbank <- read.csv('genbank.csv', stringsAsFactors = FALSE)
 genbank <- genbank[, -1]
 genbank$rank <- tolower(genbank$rank)
 
@@ -25,21 +32,21 @@ ui <- fluidPage(
     sidebarLayout(
         sidebarPanel(
             # numericInput('inp.test', 'Test Numeric Input', 20, min = 10, max = 30),
-            h4('Upload Names List'),
-            fileInput('inp.name.file', 'Names to analyze'),
+            h4('Input Names for Analysis'),
+            textInput('list.name', 'Dataset label', value = "User Data"),
+            fileInput('inp.name.file', 'Upload list of names'),
             textAreaInput(
                 'inp.name.list', 
-                'or paste list of names here (one per row)',
-                placeholder = 'Paste one name per row',
+                'OR enter list of names',
+                placeholder = 'One name per row',
                 width = '200px',
                 height = '100px'
             ),
-            h4('Optional Settings'),
             selectInput(
                 'inp.taxlevel', 
-                'Select taxonomic level', 
+                'Taxonomic level of names', 
                 c(
-                    'All',
+                    'Not Specified' = 'All',
                     'Kingdom' = 'kingdom',
                     "Phylum/Division" = 'phylum',
                     'Class' = 'class',
@@ -51,19 +58,20 @@ ui <- fluidPage(
             ),
             selectInput(
                 'inp.kingdom', 
-                'Select kingdom', 
+                'Kingdom of names', 
                 c(
-                    'All',
+                    'Not Specified' = 'All',
                     sort(unique(gbif$kingdom))
                 ),
                 width = '200px'
-            )
+            ),
+            actionButton('analyze', 'Run Analysis')
         ),
         mainPanel(
-            h2('Results'),
-            actionButton('dl.fig', 'Download Diagram'),
-            actionButton('toggle.graph', 'Toggle Graph Type'),
-            plotOutput('venn.diagram'),
+            # h2('Results'),
+            # actionButton('dl.fig', 'Download Diagram'),
+            # actionButton('toggle.graph', 'Toggle Graph Type'),
+            # plotOutput('venn.diagram'),
             h2('List Results'),
             actionButton('dl.table', 'Download Results Table'),
             tableOutput('results.table')
@@ -74,7 +82,7 @@ ui <- fluidPage(
 
 server <- function(input, output) {
     
-    filtered <- reactive({
+    filtered <- eventReactive(input$analyze, {
         print(c('Input tax level:', input$inp.taxlevel))
         print(c('Input kingdom:', input$inp.kingdom))
         if (input$inp.taxlevel == 'All' && input$inp.kingdom == 'All') {
@@ -97,7 +105,7 @@ server <- function(input, output) {
         list(gbif = f, ggbn = n, genbank = k)
     })
     
-    query.names <- reactive({
+    query.names <- eventReactive(input$analyze, {
         if ( is.null(input$inp.name.file) && is.null(input$inp.name.list) ) {
             return(NULL)
         } else if ( input$inp.name.list == 'plant families' ) {
@@ -118,7 +126,7 @@ server <- function(input, output) {
         }
     })
     
-    output$venn.diagram <- renderPlot({
+    # output$venn.diagram <- renderPlot({
 
         # coldata <- filtered.col() %>% 
         #     gather(key = rnk, value = txnm, kingdom, phylum, classis, ordo, family, genus) %>%
@@ -131,20 +139,33 @@ server <- function(input, output) {
         # # } else {
         # pie(coldata$n.names, labels = coldata$rnk)
         # # }
-        return()
-
-    })
+    #     return()
+    # 
+    # })
     
     output$results.table <- renderTable({
-        if (is.null(query.names())) {
-            return()
-        }
+        # if (is.null(query.names())) {
+        #     return('No data provided')
+        # }
         query.df <- data.frame(query.names())
-        colnames(query.df) <- c('qn')
-        query.df$ggbn <- query.df$qn %in% filtered()$ggbn$name
-        query.df$genbank <- query.df$qn %in% filtered()$genbank$name
-        colnames(query.df) <- c('Query Name', 'In GGBN', 'In GenBank')
-        query.df
+        colnames(query.df) <- c('submitted.name')
+        gbif.results <- filtered()$gbif %>% filter(name %in% query.df$submitted.name)
+        query.df <- query.df %>% 
+                    full_join(gbif.results, by = c('submitted.name' = 'name')) %>%
+                    mutate(qn = ifelse(accepted_name == '', 
+                                       submitted.name, 
+                                       accepted_name)) %>%
+                    left_join(filtered()$ggbn, 
+                              by = c('qn' = 'name', 'rank', 'kingdom'),
+                              suffix = c("_gbif", "_ggbn")) %>%
+                    left_join(filtered()$genbank,
+                              by = c('qn' = 'name', 'rank', 'kingdom'),
+                              suffix = c("", "_ggbn"))
+        if (nrow(query.df) > 100) {
+            return(query.df[100,])
+        } else {
+            return(query.df)
+        }
     })
 
 }
