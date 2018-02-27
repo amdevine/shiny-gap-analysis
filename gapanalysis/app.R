@@ -73,8 +73,8 @@ ui <- fluidPage(
             # actionButton('toggle.graph', 'Toggle Graph Type'),
             # plotOutput('venn.diagram'),
             h2('List Results'),
-            actionButton('dl.table', 'Download Results Table'),
-            tableOutput('results.table')
+            downloadButton('dl.table', 'Download Results Table'),
+            div(tableOutput('results.table'), style = "font-size:80%")
         )
     )
 )
@@ -121,9 +121,36 @@ server <- function(input, output) {
                 'Animalia', 'Arthropoda', 'Aves', 'Artiodactyla', 'Agamidae', 'Apis',
                 'Plantae', 'Pteridophyta', 'Polypodiopsida', 'Poales', 'Poaceae', 'Poa',
                 'Fungi', 'Basidiomycota', 'Agaricomycetes', 'Agaricales', 'Agaricaceae', 'Calvatia'))
+        } else if (!is.null(input$inp.name.file)) {
+            
         } else if ( is.null(input$inp.name.file) && !is.null(input$inp.name.list) ) {
             return(strsplit(input$inp.name.list, "\n"))
         }
+    })
+    
+    results.df <- reactive({
+        query.df <- data.frame(query.names())
+        colnames(query.df) <- c('submitted_name')
+        gbif.results <- filtered()$gbif %>% filter(name %in% query.df$submitted_name)
+        query.df <- query.df %>% 
+                    full_join(gbif.results, by = c('submitted_name' = 'name')) %>%
+                    mutate(qn = ifelse(accepted_name == '', 
+                                       submitted_name, 
+                                       accepted_name)) %>%
+                    left_join(filtered()$ggbn, 
+                              by = c('qn' = 'name', 'rank', 'kingdom'),
+                              suffix = c("_gbif", "_ggbn")) %>%
+                    left_join(filtered()$genbank,
+                              by = c('qn' = 'name', 'rank', 'kingdom'),
+                              suffix = c("", "_genbank")) %>%
+                    rename(name_status = status, phylum_genbank = phylum, 
+                           class_genbank = class, order_genbank = order, 
+                           family_genbank = family, genus_genbank = genus) %>%
+                    select(submitted_name, rank, name_status, accepted_name, qn, 
+                           kingdom, phylum_gbif, class_gbif, order_gbif, family_gbif, 
+                           genus_gbif, phylum_ggbn, class_ggbn, order_ggbn, family_ggbn, 
+                           genus_ggbn, phylum_genbank, class_genbank, order_genbank, 
+                           family_genbank, genus_genbank)
     })
     
     # output$venn.diagram <- renderPlot({
@@ -144,29 +171,41 @@ server <- function(input, output) {
     # })
     
     output$results.table <- renderTable({
-        # if (is.null(query.names())) {
-        #     return('No data provided')
-        # }
-        query.df <- data.frame(query.names())
-        colnames(query.df) <- c('submitted.name')
-        gbif.results <- filtered()$gbif %>% filter(name %in% query.df$submitted.name)
-        query.df <- query.df %>% 
-                    full_join(gbif.results, by = c('submitted.name' = 'name')) %>%
-                    mutate(qn = ifelse(accepted_name == '', 
-                                       submitted.name, 
-                                       accepted_name)) %>%
-                    left_join(filtered()$ggbn, 
-                              by = c('qn' = 'name', 'rank', 'kingdom'),
-                              suffix = c("_gbif", "_ggbn")) %>%
-                    left_join(filtered()$genbank,
-                              by = c('qn' = 'name', 'rank', 'kingdom'),
-                              suffix = c("", "_ggbn"))
-        if (nrow(query.df) > 100) {
-            return(query.df[100,])
+        table.data <- results.df() %>%
+                      mutate(in_ggbn = ifelse(is.na(phylum_ggbn), "No", "Yes")) %>%
+                      mutate(in_genbank = ifelse(is.na(phylum_genbank), "No", "Yes")) %>%
+                      select(submitted_name, rank, name_status, accepted_name, 
+                             in_ggbn, in_genbank,
+                             kingdom, phylum_gbif, class_gbif, order_gbif, family_gbif,
+                             genus_gbif) %>%  
+                      rename('Submitted Name' = submitted_name,
+                             Rank = rank,
+                             'Name Status' = name_status,
+                             'Accepted Name' = accepted_name,
+                             Kingdom = kingdom,
+                             Phylum = phylum_gbif,
+                             Class = class_gbif,
+                             Order = order_gbif,
+                             Family = family_gbif,
+                             Genus = genus_gbif,
+                             'In GGBN' = in_ggbn,
+                             'In GenBank' = in_genbank)
+        if (nrow(table.data) > 100) {
+            return(table.data[100,])
         } else {
-            return(query.df)
+            return(table.data)
         }
     })
+    
+    output$dl.table <- downloadHandler(
+        filename = function() {
+            paste(input$list.name, "Gap Analysis.csv", sep = ' ')
+        },
+        content = function(file) {
+            write.csv(results.df(), file, row.names = FALSE)
+        },
+        contentType = 'text/plain'
+    )
 
 }
 
