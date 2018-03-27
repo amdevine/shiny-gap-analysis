@@ -72,15 +72,18 @@ ui <- fluidPage(
             # actionButton('dl.fig', 'Download Diagram'),
             # actionButton('toggle.graph', 'Toggle Graph Type'),
             tabsetPanel(type = 'tabs',
+                        tabPanel("Results Table", 
+                                 downloadButton('dl.table', 'Download Results Table', style = "margin-bottom:1em"),
+                                 div(tableOutput('results.table'), style = "font-size:80%")),
                         tabPanel("Phyla", plotOutput('venn.phyla')),
                         tabPanel("Classes", plotOutput('venn.classes')),
                         tabPanel("Orders", plotOutput('venn.orders')),
                         tabPanel("Families", plotOutput('venn.families')),
-                        tabPanel("Genera", plotOutput('venn.genera'))),
+                        tabPanel("Genera", plotOutput('venn.genera')))
             # plotOutput('venn.diagram'),
-            h3('Results Table'),
-            downloadButton('dl.table', 'Download Results Table', style = "margin-bottom:1em"),
-            div(tableOutput('results.table'), style = "font-size:80%")
+            # h3('Results Table'),
+            # downloadButton('dl.table', 'Download Results Table', style = "margin-bottom:1em"),
+            # div(tableOutput('results.table'), style = "font-size:80%")
         )
     ),
     p('For assistance with this application, please contact ggi@globalgeno.me.',
@@ -192,24 +195,25 @@ server <- function(input, output) {
 
     output$results.table <- renderTable({
         table.data <- results.df() %>%
-                      mutate(in_ggbn = ifelse(is.na(phylum_ggbn), "No", "Yes")) %>%
-                      mutate(in_genbank = ifelse(is.na(phylum_genbank), "No", "Yes")) %>%
-                      select(submitted_name, rank, name_status, accepted_name, 
-                             in_ggbn, in_genbank,
-                             kingdom, phylum_gbif, class_gbif, order_gbif, family_gbif,
-                             genus_gbif) %>%  
-                      rename('Submitted Name' = submitted_name,
+                      mutate(in_ggbn = ifelse(is.na(phylum_ggbn), "No", "Yes"),
+                             in_genbank = ifelse(is.na(phylum_genbank), "No", "Yes")) %>%
+                      # select(submitted_name, rank, name_status, accepted_name, 
+                      #        in_ggbn, in_genbank,
+                      #        kingdom, phylum_gbif, class_gbif, order_gbif, family_gbif,
+                      #        genus_gbif) %>%  
+                      select('Submitted Name' = submitted_name,
                              Rank = rank,
                              'Name Status' = name_status,
                              'Accepted Name' = accepted_name,
+                             'Queried Name' = qn,
+                             'In GGBN' = in_ggbn,
+                             'In GenBank' = in_genbank,
                              Kingdom = kingdom,
                              Phylum = phylum_gbif,
                              Class = class_gbif,
                              Order = order_gbif,
                              Family = family_gbif,
-                             Genus = genus_gbif,
-                             'In GGBN' = in_ggbn,
-                             'In GenBank' = in_genbank)
+                             Genus = genus_gbif)
         if (nrow(table.data) > 100) {
             return(table.data[1:100,])
         } else {
@@ -222,7 +226,14 @@ server <- function(input, output) {
             paste(input$list.name, "Gap Analysis.csv", sep = ' ')
         },
         content = function(file) {
-            write.csv(results.df(), file, row.names = FALSE)
+            filtered.columns <- results.df() %>%
+                                mutate(in_ggbn = case_when(is.na(phylum_ggbn) ~ "no", TRUE ~ "yes"),
+                                       in_genbank = case_when(is.na(phylum_genbank) ~ "no", TRUE ~ "yes")) %>%
+                                select(submitted_name, rank, name_status, accepted_name, queried_name = qn,
+                                       in_ggbn, in_genbank,
+                                       kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
+                                       family = family_gbif, genus = genus_gbif)
+            write.table(filtered.columns, file, row.names = FALSE, sep = '\t')
         },
         contentType = 'text/plain'
     )
