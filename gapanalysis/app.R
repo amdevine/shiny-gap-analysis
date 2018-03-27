@@ -72,14 +72,22 @@ ui <- fluidPage(
             # actionButton('dl.fig', 'Download Diagram'),
             # actionButton('toggle.graph', 'Toggle Graph Type'),
             tabsetPanel(type = 'tabs',
+                        tabPanel("Summary",
+                                 tableOutput('summary.table')),
                         tabPanel("Results Table", 
-                                 downloadButton('dl.table', 'Download Results Table', style = "margin-bottom:1em"),
+                                 downloadButton('dl.table', 
+                                                'Download Results Table', 
+                                                style = "margin-bottom:1em;margin-top:1em"),
                                  div(tableOutput('results.table'), style = "font-size:80%")),
-                        tabPanel("Phyla", plotOutput('venn.phyla')),
-                        tabPanel("Classes", plotOutput('venn.classes')),
-                        tabPanel("Orders", plotOutput('venn.orders')),
-                        tabPanel("Families", plotOutput('venn.families')),
-                        tabPanel("Genera", plotOutput('venn.genera')))
+                        tabPanel("Figures",
+                                 downloadButton('dl.figures',
+                                                'Download Figures',
+                                                style = "margin-bottom:1em;margin-top:1em"),
+                                 plotOutput('venn.phyla'),
+                                 plotOutput('venn.classes'),
+                                 plotOutput('venn.orders'),
+                                 plotOutput('venn.families'),
+                                 plotOutput('venn.genera')))
             # plotOutput('venn.diagram'),
             # h3('Results Table'),
             # downloadButton('dl.table', 'Download Results Table', style = "margin-bottom:1em"),
@@ -167,32 +175,44 @@ server <- function(input, output) {
     
     graph.label <- eventReactive(input$analyze, {return(input$list.name)})
     
-    output$venn.phyla <- renderPlot({
+    pfig <- reactive({
         hist(rnorm(100, mean = 10, sd = 1), 
              main = paste(graph.label(), '- Phyla', sep = " "),
              xlab = 'Phyla')
     })
-    output$venn.classes <- renderPlot({
+    
+    cfig <- reactive({
         hist(rnorm(100, mean = 20, sd = 1), 
              main = paste(graph.label(), '- Classes', sep = " "),
-             xlab = 'Classes')
+             xlab = 'Classes')        
     })
-    output$venn.orders <- renderPlot({
+    
+    ofig <- reactive({
         hist(rnorm(100, mean = 30, sd = 1), 
              main = paste(graph.label(), '- Orders', sep = " "),
              xlab = 'Orders')
     })
-    output$venn.families <- renderPlot({
+    
+    ffig <- reactive({
         hist(rnorm(100, mean = 40, sd = 1), 
              main = paste(graph.label(), '- Families', sep = " "),
              xlab = 'Families')
     })
-    output$venn.genera <- renderPlot({
+    
+    gfig <- reactive({
         hist(rnorm(100, mean = 50, sd = 1), 
              main = paste(graph.label(), '- Genera', sep = " "),
              xlab = 'Genera')
     })
+    
+    output$venn.phyla <- renderPlot({ pfig() })
+    output$venn.classes <- renderPlot({ cfig() })
+    output$venn.orders <- renderPlot({ ofig() })
+    output$venn.families <- renderPlot({ ffig() })
+    output$venn.genera <- renderPlot({ gfig() })
 
+    output$summary.table <- renderTable({})
+    
     output$results.table <- renderTable({
         table.data <- results.df() %>%
                       mutate(in_ggbn = ifelse(is.na(phylum_ggbn), "No", "Yes"),
@@ -222,6 +242,7 @@ server <- function(input, output) {
     })
     
     output$dl.table <- downloadHandler(
+        contentType = 'text/plain',
         filename = function() {
             paste(input$list.name, "Gap Analysis.csv", sep = ' ')
         },
@@ -234,8 +255,15 @@ server <- function(input, output) {
                                        kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
                                        family = family_gbif, genus = genus_gbif)
             write.table(filtered.columns, file, row.names = FALSE, sep = '\t')
+        }
+    )
+    
+    output$dl.figures <- downloadHandler(
+        contentType = 'image/png',
+        filename = function() {
+            paste(input$list.name, "Figures.zip", sep = ' ')
         },
-        contentType = 'text/plain'
+        content = 
     )
 
 }
