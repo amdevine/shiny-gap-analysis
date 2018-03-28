@@ -51,7 +51,7 @@ ui <- fluidPage(
             selectInput(
                 # width = '200px,',
                 'inp.taxlevel', 
-                'Taxonomic level of names', 
+                'Taxonomic rank of names', 
                 c(
                     'Not Specified' = 'All',
                     'Kingdom' = 'kingdom',
@@ -77,16 +77,54 @@ ui <- fluidPage(
         # Results tabs
         mainPanel(
             h3('Results'),
-            # actionButton('dl.fig', 'Download Diagram'),
-            # actionButton('toggle.graph', 'Toggle Graph Type'),
             tabsetPanel(type = 'tabs',
+                        
+                        tabPanel("Instructions",
+                                 h4("Input Names"),
+                                 p(strong("Dataset label:"), 
+                                   "Enter the name of analysis. e.g. \'NMNH Amphibians\'"),
+                                 p(strong("Upload list of names:"), 
+                                   "Allows text (.txt) file containing list of names to be upload for analysis. 
+                                   Please format text file with one name per line."),
+                                 p(strong("Enter list of names:"), 
+                                   "Alternatively, enter a list of names to be analyzed.
+                                   Please enter one name per line."),
+                                 p(strong("Taxonomic rank of names:"), 
+                                   "If all names are the same taxonomic rank (e.g. Family, Genus),
+                                   select the appropriate rank. This may reduce the number of
+                                   extraneous results returned from incorrect ranks."),
+                                 p(strong("Kingdom of names:"), 
+                                   "If all names are the found in the same kingdom (e.g. Animalia, Plantae), 
+                                   select the appropriate kingdom. This may reduce the number of 
+                                   extraneous results from homonymous names."),
+                                 h4("Results"),
+                                 p("Submitted names are queried in static inventory lists from GBIF, GGBN,
+                                   and GenBank. Names are first matched to GBIF, which returns the taxonomic
+                                   rank, name status, and if the name is not accepted, the accepted name.
+                                   Then the accepted name is queried in GGBN and GenBank, which returns whether 
+                                   that name is found in those databases. The taxonomic hierarchy is provided 
+                                   for each name to allow the user to verify that the correct name has been queried."),
+                                 p(strong("Summary:"),
+                                   "A summary of the names entered, and how many were found to be in GBIF,
+                                   GGBN, and GenBank."),
+                                 p(strong("Results Table:"),
+                                   "Returns a table containing results of the first 100 names submitted. 
+                                   The \'Download Results Table\' button allows the user to download the results 
+                                   for all submitted names as a comma-delimited .csv file."),
+                                 p(strong("Figures:"),
+                                   "Venn diagrams generated at each taxonomic level, showing the breakdown of 
+                                   names submitted and their presence in GGBN and GenBank.")
+                                 ),
+                        
                         tabPanel("Summary",
                                  tableOutput('summary.table')),
+                        
                         tabPanel("Results Table", 
                                  downloadButton('dl.table', 
                                                 'Download Results Table', 
                                                 style = "margin-bottom:1em;margin-top:1em"),
                                  div(tableOutput('results.table'), style = "font-size:80%")),
+                        
                         tabPanel("Figures",
                                  # downloadButton('dl.figures',
                                  #                'Download Figures',
@@ -96,12 +134,7 @@ ui <- fluidPage(
                                  plotOutput('venn.orders'),
                                  plotOutput('venn.families'),
                                  plotOutput('venn.genera')))
-            # plotOutput('venn.diagram'),
-            # h3('Results Table'),
-            # downloadButton('dl.table', 'Download Results Table', style = "margin-bottom:1em"),
-            # div(tableOutput('results.table'), style = "font-size:80%")
-        )
-    ),
+    )),
     
     # Footer
     p('For assistance with this application, please contact ggi@globalgeno.me.',
@@ -141,7 +174,7 @@ server <- function(input, output) {
         list(gbif = f, ggbn = n, genbank = k)
     })
     
-    # Processes list of user-inputted names
+    # Processes list of user-inputed names
     query.names <- eventReactive(input$analyze, {
         if ( is.null(input$inp.name.file) && is.null(input$inp.name.list) ) {
             return(NULL)
@@ -196,7 +229,7 @@ server <- function(input, output) {
                            family_genbank, genus_genbank)
     })
     
-    graph.label <- eventReactive(input$analyze, {return(input$list.name)})
+    graph.label <- eventReactive(input$analyze, { return(input$list.name) })
     
     pfig <- reactive({
         hist(rnorm(100, mean = 10, sd = 1), 
