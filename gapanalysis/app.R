@@ -9,27 +9,33 @@ library(tidyr)
 # Load data from Dropbox
 token <- readRDS('dropbox_token.rds')
 
-# CHANGE FOR DEPLOYMENT
-# gbif <- drop_read_csv('shiny/gbif.csv', dtoken = token, stringsAsFactors = FALSE)
-gbif <- read.csv('gbif.csv', stringsAsFactors = FALSE)
+# FOR USE DURING DEVELOPMENT
+gbif <- read.csv('../gbif.csv', stringsAsFactors = FALSE)
+ggbn <- read.csv('../ggbn.csv', stringsAsFactors = FALSE)
+genbank <- read.csv('../genbank.csv', stringsAsFactors = FALSE)
 
-# CHANGE FOR DEPLOYMENT
+# FOR USE ON LIVE SITE
+# gbif <- drop_read_csv('shiny/gbif.csv', dtoken = token, stringsAsFactors = FALSE)
 # ggbn <- drop_read_csv('shiny/ggbn.csv', dtoken = token, stringsAsFactors = FALSE)
-ggbn <- read.csv('ggbn.csv', stringsAsFactors = FALSE)
+# genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token, stringsAsFactors = FALSE)
+
+# Select appropriate GGBN and GenBank columns
 ggbn <- ggbn[, -1]
 ggbn$rank <- tolower(ggbn$rank)
 
-# CHANGE FOR DEPLOYMENT
-# genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token, stringsAsFactors = FALSE)
-genbank <- read.csv('genbank.csv', stringsAsFactors = FALSE)
 genbank <- genbank[, -1]
 genbank$rank <- tolower(genbank$rank)
 
 # User interface
 ui <- fluidPage(
+    
+    # Title
     titlePanel('GGI Gap Analysis Tool'),
     p('This app is used to conduct gap analyses for GGI funded projects.'),
+    
     sidebarLayout(
+        
+        # Options menu on sidebar
         sidebarPanel(
             width = 3,
             h3('Input Names'),
@@ -67,6 +73,8 @@ ui <- fluidPage(
             ),
             actionButton('analyze', 'Run Analysis')
         ),
+        
+        # Results tabs
         mainPanel(
             h3('Results'),
             # actionButton('dl.fig', 'Download Diagram'),
@@ -80,9 +88,9 @@ ui <- fluidPage(
                                                 style = "margin-bottom:1em;margin-top:1em"),
                                  div(tableOutput('results.table'), style = "font-size:80%")),
                         tabPanel("Figures",
-                                 downloadButton('dl.figures',
-                                                'Download Figures',
-                                                style = "margin-bottom:1em;margin-top:1em"),
+                                 # downloadButton('dl.figures',
+                                 #                'Download Figures',
+                                 #                style = "margin-bottom:1em;margin-top:1em"),
                                  plotOutput('venn.phyla'),
                                  plotOutput('venn.classes'),
                                  plotOutput('venn.orders'),
@@ -94,6 +102,8 @@ ui <- fluidPage(
             # div(tableOutput('results.table'), style = "font-size:80%")
         )
     ),
+    
+    # Footer
     p('For assistance with this application, please contact ggi@globalgeno.me.',
       style = "margin-bottom:3em")
 )
@@ -101,9 +111,16 @@ ui <- fluidPage(
 
 server <- function(input, output) {
     
+    # Returns string with first letter of each word capitalized
+    .simpleCap <- function(x) {
+        x <- tolower(x)
+        s <- strsplit(x, " ")[[1]]
+        paste(toupper(substring(s, 1, 1)), substring(s, 2),
+              sep = "", collapse = " ")
+    }
+    
+    # Filters GBIF, GGBN, and GenBank dataframes based on user input of Kingdom and Tax Rank
     filtered <- eventReactive(input$analyze, {
-        print(c('Input tax level:', input$inp.taxlevel))
-        print(c('Input kingdom:', input$inp.kingdom))
         if (input$inp.taxlevel == 'All' && input$inp.kingdom == 'All') {
             f <- gbif
             n <- ggbn
@@ -124,6 +141,7 @@ server <- function(input, output) {
         list(gbif = f, ggbn = n, genbank = k)
     })
     
+    # Processes list of user-inputted names
     query.names <- eventReactive(input$analyze, {
         if ( is.null(input$inp.name.file) && is.null(input$inp.name.list) ) {
             return(NULL)
@@ -142,9 +160,14 @@ server <- function(input, output) {
                 'Fungi', 'Basidiomycota', 'Agaricomycetes', 'Agaricales', 'Agaricaceae', 'Calvatia'))
         } else if (!is.null(input$inp.name.file)) {
             infile <- read.table(input$inp.name.file$datapath, sep = "\n", stringsAsFactors = FALSE)
-            return(as.character(infile[,1]))
+            ns <- as.character(infile[,1])
+            ns <- sapply(ns, .simpleCap)
+            print(ns)
+            return(ns)
         } else if ( is.null(input$inp.name.file) && !is.null(input$inp.name.list) ) {
-            return(strsplit(input$inp.name.list, "\n"))
+            ns <- unlist(strsplit(input$inp.name.list, "\n"))
+            ns <- sapply(ns, .simpleCap)
+            return(ns)
         }
     })
     
@@ -258,13 +281,32 @@ server <- function(input, output) {
         }
     )
     
-    output$dl.figures <- downloadHandler(
-        contentType = 'image/png',
-        filename = function() {
-            paste(input$list.name, "Figures.zip", sep = ' ')
-        },
-        content = 
-    )
+    # output$dl.figures <- downloadHandler(
+    #     contentType = 'application/zip',
+    #     filename = function() {
+    #         paste(input$list.name, "Figures.zip", sep = ' ')
+    #     },
+    #     content = function(file) {
+    #         paths <- c()
+    #         figs <- list(c("phyla", pfig()), 
+    #                      c("classes", cfig()), 
+    #                      c("orders", ofig()), 
+    #                      c("families", ffig()), 
+    #                      c("genera", gfig()))
+    #         tmp <- tempdir()
+    #         setwd(tempdir())
+    #         for (f in figs) { 
+    #             fname <- paste0(f[1], ".png")
+    #             paths <- c(paths, fname)
+    #             ggsave(fname, plot = f[2], device = 'png')
+    #         }
+    #         zip(zipfile = file, files = paths)
+    #     }
+    # )
+    # output$dl.figures <- downloadHandler(
+    #     filename = "phyla.txt",
+    #     content = function
+    # )
 
 }
 
