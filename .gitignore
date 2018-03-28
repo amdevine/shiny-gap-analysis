@@ -3,9 +3,10 @@
 .RData
 *.Rproj
 .Ruserdata
-gapanalysis/col.csv
-gapanalysis/gbif.csv
-gapanalysis/ggbn.csv
-gapanalysis/genbank.csv
+col.csv
+gbif.csv
+ggbn.csv
+genbank.csv
 .httr-oauth
 *dropbox_token.rds
+gapanalysis/rsconnect/
