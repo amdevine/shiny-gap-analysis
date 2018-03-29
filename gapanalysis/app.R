@@ -204,6 +204,7 @@ server <- function(input, output) {
         }
     })
     
+    # Data frame containing the results of joining all the data sets
     results.df <- reactive({
         query.df <- data.frame(query.names())
         colnames(query.df) <- c('submitted_name')
@@ -231,52 +232,76 @@ server <- function(input, output) {
     
     graph.label <- eventReactive(input$analyze, { return(input$list.name) })
     
+    # Generates Venn diagrams at each taxonomic level depending on results.df
     pfig <- reactive({
         hist(rnorm(100, mean = 10, sd = 1), 
              main = paste(graph.label(), '- Phyla', sep = " "),
-             xlab = 'Phyla')
-    })
-    
+             xlab = 'Phyla')})
     cfig <- reactive({
         hist(rnorm(100, mean = 20, sd = 1), 
              main = paste(graph.label(), '- Classes', sep = " "),
-             xlab = 'Classes')        
-    })
-    
+             xlab = 'Classes')})
     ofig <- reactive({
         hist(rnorm(100, mean = 30, sd = 1), 
              main = paste(graph.label(), '- Orders', sep = " "),
-             xlab = 'Orders')
-    })
-    
+             xlab = 'Orders')})
     ffig <- reactive({
         hist(rnorm(100, mean = 40, sd = 1), 
              main = paste(graph.label(), '- Families', sep = " "),
-             xlab = 'Families')
-    })
-    
+             xlab = 'Families')})
     gfig <- reactive({
         hist(rnorm(100, mean = 50, sd = 1), 
              main = paste(graph.label(), '- Genera', sep = " "),
-             xlab = 'Genera')
-    })
+             xlab = 'Genera')})
     
+    # Adds Venn diagrams to the output
     output$venn.phyla <- renderPlot({ pfig() })
     output$venn.classes <- renderPlot({ cfig() })
     output$venn.orders <- renderPlot({ ofig() })
     output$venn.families <- renderPlot({ ffig() })
     output$venn.genera <- renderPlot({ gfig() })
 
-    output$summary.table <- renderTable({})
+    # Creates summary of results
+    output$summary.table <- renderTable({
+        n.querynames <- length(query.names())
+        n.results <- nrow(results.df())
+        ggbn.names <- ggbn %>%
+                      select(kingdom, phylum, class, order, family, genus) %>%
+                      gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
+                      select(name) %>%
+                      unique() %>%
+                      filter(name != '') %>%
+                      as.character()
+        genbank.names <- genbank %>%
+                         select(kingdom, phylum, class, order, family, genus) %>%
+                         gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
+                         select(name) %>%
+                         unique() %>%
+                         filter(name != '') %>%
+                         as.character()             
+        sub.data <- results.df() %>%
+                    select(kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
+                           family = family_gbif, genus = genus_gbif) %>%
+                    gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
+                    unique() %>%
+                    filter(name != '') %>%
+                    mutate(new_ggbn = ifelse(name %in% ggbn.names, FALSE, TRUE),
+                           new_genbank = ifelse(name %in% genbank.names, FALSE, TRUE)) %>%
+                    mutate(new_both = ifelse(new_ggbn && new_genbank, TRUE, FALSE),
+                           new_neither = ifelse(!new_ggbn && !new_genbank, TRUE, FALSE)) %>%
+                    group_by(rank) %>%
+                    summarize('Total' = n(),
+                              'New to GGBN' = sum(new_ggbn),
+                              'New to GenBank' = sum(new_genbank),
+                              'New to Both GGBN and GenBank' = sum(new_both),
+                              'Already in GGBN and GenBank' = sum(new_neither))
+    })
     
+    # Creates results table of results
     output$results.table <- renderTable({
         table.data <- results.df() %>%
                       mutate(in_ggbn = ifelse(is.na(phylum_ggbn), "No", "Yes"),
                              in_genbank = ifelse(is.na(phylum_genbank), "No", "Yes")) %>%
-                      # select(submitted_name, rank, name_status, accepted_name, 
-                      #        in_ggbn, in_genbank,
-                      #        kingdom, phylum_gbif, class_gbif, order_gbif, family_gbif,
-                      #        genus_gbif) %>%  
                       select('Submitted Name' = submitted_name,
                              Rank = rank,
                              'Name Status' = name_status,
