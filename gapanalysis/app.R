@@ -230,6 +230,45 @@ server <- function(input, output) {
                            family_genbank, genus_genbank)
     })
     
+    # Data frame containing numerical counts of taxa new to GGBN and/or GenBank
+    summary.df <- reactive({
+        n.querynames <- length(query.names())
+        n.results <- nrow(results.df())
+        ggbn.names <- ggbn %>%
+                        select(kingdom, phylum, class, order, family, genus) %>%
+                        gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
+                        filter(name != '') %>%
+                        select(name) %>%
+                        unique()
+        ggbn.names <- ggbn.names$name
+        genbank.names <- genbank %>%
+                         select(kingdom, phylum, class, order, family, genus) %>%
+                         gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
+                         filter(name != '') %>%
+                         select(name) %>%
+                         unique()
+        genbank.names <- genbank.names$name
+        sub.data <- results.df() %>%
+                    select(kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
+                           family = family_gbif, genus = genus_gbif) %>%
+                    gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
+                    unique() %>%
+                    filter(name != '')
+        sub.data <- sub.data %>%
+                    mutate(new_ggbn = ifelse(name %in% ggbn.names, FALSE, TRUE),
+                           new_genbank = ifelse(name %in% genbank.names, FALSE, TRUE))
+        sub.data <- sub.data %>%
+                    mutate(new_both = ifelse(new_ggbn & new_genbank, TRUE, FALSE),
+                           new_neither = ifelse((!new_ggbn) & (!new_genbank), TRUE, FALSE)) %>%
+                    group_by(rank) %>%
+                    summarize('total' = n(),
+                              'new_ggbn' = sum(new_ggbn),
+                              'new_genbank' = sum(new_genbank),
+                              'new_both' = sum(new_both),
+                              'new_neither' = sum(new_neither))
+    })
+    
+    # Label 
     graph.label <- eventReactive(input$analyze, { return(input$list.name) })
     
     # Generates Venn diagrams at each taxonomic level depending on results.df
@@ -263,38 +302,7 @@ server <- function(input, output) {
 
     # Creates summary of results
     output$summary.table <- renderTable({
-        n.querynames <- length(query.names())
-        n.results <- nrow(results.df())
-        ggbn.names <- ggbn %>%
-                      select(kingdom, phylum, class, order, family, genus) %>%
-                      gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
-                      select(name) %>%
-                      unique() %>%
-                      filter(name != '') %>%
-                      as.character()
-        genbank.names <- genbank %>%
-                         select(kingdom, phylum, class, order, family, genus) %>%
-                         gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
-                         select(name) %>%
-                         unique() %>%
-                         filter(name != '') %>%
-                         as.character()             
-        sub.data <- results.df() %>%
-                    select(kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
-                           family = family_gbif, genus = genus_gbif) %>%
-                    gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
-                    unique() %>%
-                    filter(name != '') %>%
-                    mutate(new_ggbn = ifelse(name %in% ggbn.names, FALSE, TRUE),
-                           new_genbank = ifelse(name %in% genbank.names, FALSE, TRUE)) %>%
-                    mutate(new_both = ifelse(new_ggbn && new_genbank, TRUE, FALSE),
-                           new_neither = ifelse(!new_ggbn && !new_genbank, TRUE, FALSE)) %>%
-                    group_by(rank) %>%
-                    summarize('Total' = n(),
-                              'New to GGBN' = sum(new_ggbn),
-                              'New to GenBank' = sum(new_genbank),
-                              'New to Both GGBN and GenBank' = sum(new_both),
-                              'Already in GGBN and GenBank' = sum(new_neither))
+        summary.df()
     })
     
     # Creates results table of results
