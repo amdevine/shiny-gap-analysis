@@ -117,6 +117,9 @@ ui <- fluidPage(
                                  ),
                         
                         tabPanel("Summary",
+                                 downloadButton('dl.summary', 
+                                                'Download Summary Table', 
+                                                style = "margin-bottom:1em;margin-top:1em"),
                                  tableOutput('summary.table')),
                         
                         tabPanel("Results Table", 
@@ -255,17 +258,34 @@ server <- function(input, output) {
                     unique() %>%
                     filter(name != '')
         sub.data <- sub.data %>%
-                    mutate(new_ggbn = ifelse(name %in% ggbn.names, FALSE, TRUE),
-                           new_genbank = ifelse(name %in% genbank.names, FALSE, TRUE))
+                    mutate(in_ggbn = ifelse(name %in% ggbn.names, TRUE, FALSE),
+                           in_genbank = ifelse(name %in% genbank.names, TRUE, FALSE))
         sub.data <- sub.data %>%
-                    mutate(new_both = ifelse(new_ggbn & new_genbank, TRUE, FALSE),
-                           new_neither = ifelse((!new_ggbn) & (!new_genbank), TRUE, FALSE)) %>%
+                    mutate(new_ggbn = !in_ggbn,
+                           new_genbank = !in_genbank)
+        sub.data <- sub.data %>%
+                    mutate(in_ggbn_only = ifelse(in_ggbn & !in_genbank, TRUE, FALSE),
+                           in_genbank_only = ifelse(!in_ggbn & in_genbank, TRUE, FALSE),
+                           in_both = ifelse(in_ggbn & in_genbank, TRUE, FALSE),
+                           in_neither = ifelse(!in_ggbn & !in_genbank, TRUE, FALSE),
+                           new_ggbn_only = ifelse(new_ggbn & !new_genbank, TRUE, FALSE),
+                           new_genbank_only = ifelse(!new_ggbn & new_genbank, TRUE, FALSE),
+                           new_both = ifelse(new_ggbn & new_genbank, TRUE, FALSE),
+                           new_neither = ifelse(!new_ggbn & !new_genbank, TRUE, FALSE)) %>%
                     group_by(rank) %>%
                     summarize('total' = n(),
-                              'new_ggbn' = sum(new_ggbn),
-                              'new_genbank' = sum(new_genbank),
-                              'new_both' = sum(new_both),
-                              'new_neither' = sum(new_neither))
+                              'total_in_ggbn' = sum(in_ggbn),
+                              'total_in_genbank' = sum(in_genbank),
+                              'in_ggbn_only' = sum(in_ggbn_only),
+                              'in_genbank_only' = sum(in_genbank_only),
+                              'in_both' = sum(in_both),
+                              'in_neither' = sum(in_neither),
+                              'total_new_to_ggbn' = sum(new_ggbn),
+                              'total_new_to_genbank' = sum(new_genbank),
+                              'new_to_ggbn_only' = sum(new_ggbn_only),
+                              'new_to_genbank_only' = sum(new_genbank_only),
+                              'new_to_both' = sum(new_both),
+                              'new_to_neither' = sum(new_neither))
     })
     
     # Label 
@@ -302,7 +322,15 @@ server <- function(input, output) {
 
     # Creates summary of results
     output$summary.table <- renderTable({
-        summary.df()
+        rank.order <- c('kingdom', 'phylum', 'class', 'order', 'family', 'genus')
+        summary.display <- summary.df() %>%
+                           select('Rank' = rank,
+                                  'Total' = total,
+                                  'New to GGBN' = total_new_to_ggbn,
+                                  'New to GenBank' = total_new_to_genbank,
+                                  'New to Both GGBN and GenBank' = new_to_both,
+                                  'Already in Both GGBN and GenBank' = new_to_neither)
+        summary.display
     })
     
     # Creates results table of results
@@ -330,6 +358,7 @@ server <- function(input, output) {
         }
     })
     
+    # Download results table
     output$dl.table <- downloadHandler(
         contentType = 'text/plain',
         filename = function() {
@@ -344,6 +373,23 @@ server <- function(input, output) {
                                        kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
                                        family = family_gbif, genus = genus_gbif)
             write.table(filtered.columns, file, row.names = FALSE, sep = '\t')
+        }
+    )
+    
+    output$dl.summary <- downloadHandler(
+        contentType = 'text/plain',
+        filename = function() {
+            paste(input$list.name, "Summary.csv", sep = ' ')
+        },
+        content = function(file) {
+            summary.file <- summary.df() %>%
+                            select('Rank' = rank,
+                                   'Total' = total,
+                                   'New to GGBN' = total_new_to_ggbn,
+                                   'New to GenBank' = total_new_to_genbank,
+                                   'New to Both GGBN and GenBank' = new_to_both,
+                                   'Already in Both GGBN and GenBank' = new_to_neither)
+            write.table(summary.file, file, row.names = FALSE, sep = '\t')
         }
     )
     
