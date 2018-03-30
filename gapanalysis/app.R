@@ -10,14 +10,14 @@ library(tidyr)
 token <- readRDS('dropbox_token.rds')
 
 # FOR USE DURING DEVELOPMENT
-gbif <- read.csv('../gbif.csv', stringsAsFactors = FALSE)
-ggbn <- read.csv('../ggbn.csv', stringsAsFactors = FALSE)
-genbank <- read.csv('../genbank.csv', stringsAsFactors = FALSE)
+# gbif <- read.csv('../gbif.csv', stringsAsFactors = FALSE)
+# ggbn <- read.csv('../ggbn.csv', stringsAsFactors = FALSE)
+# genbank <- read.csv('../genbank.csv', stringsAsFactors = FALSE)
 
 # FOR USE ON LIVE SITE
-# gbif <- drop_read_csv('shiny/gbif.csv', dtoken = token, stringsAsFactors = FALSE)
-# ggbn <- drop_read_csv('shiny/ggbn.csv', dtoken = token, stringsAsFactors = FALSE)
-# genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token, stringsAsFactors = FALSE)
+gbif <- drop_read_csv('shiny/gbif.csv', dtoken = token, stringsAsFactors = FALSE)
+ggbn <- drop_read_csv('shiny/ggbn.csv', dtoken = token, stringsAsFactors = FALSE)
+genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token, stringsAsFactors = FALSE)
 
 # Select appropriate GGBN and GenBank columns
 ggbn <- ggbn[, -1]
@@ -198,7 +198,6 @@ server <- function(input, output) {
             infile <- read.table(input$inp.name.file$datapath, sep = "\n", stringsAsFactors = FALSE)
             ns <- as.character(infile[,1])
             ns <- sapply(ns, .simpleCap)
-            print(ns)
             return(ns)
         } else if ( is.null(input$inp.name.file) && !is.null(input$inp.name.list) ) {
             ns <- unlist(strsplit(input$inp.name.list, "\n"))
