@@ -74,7 +74,7 @@ function(input, output) {
     
     # Data frame containing the results of joining all the data sets
     results.df <- reactive({
-        query.df <- data.frame(query.names())
+        query.df <- data.frame(query.names(), stringsAsFactors = FALSE)
         colnames(query.df) <- c('submitted_name')
         gbif.results <- filtered()$gbif %>% filter(name %in% query.df$submitted_name)
         query.df <- query.df %>% 
@@ -223,6 +223,38 @@ function(input, output) {
         }
     })
     
+    # Appends Summary tab containing summary of results
+    observeEvent(input$analyze, {
+        removeTab(inputId = 'resultstabs',
+                  target = 'Summary')
+        insertTab(inputId = 'resultstabs', 
+                  tabPanel("Summary",
+                           downloadButton('dl.summary', 
+                                          'Download Summary Table', 
+                                          style = "margin-bottom:1em;margin-top:1em"),
+                           tableOutput('summary.table')),
+                  target = 'Instructions',
+                  position = 'after'
+    )})
+        
+    # Appends Results Table tab containing results table
+    observeEvent(input$analyze, {
+        removeTab(inputId = 'resultstabs',
+                  target = 'Results Table')
+        insertTab(inputId = 'resultstabs',
+                  tabPanel("Results Table", 
+                           downloadButton('dl.table', 
+                                          'Download Results Table', 
+                                          style = "margin-bottom:1em;margin-top:1em"),
+                           div(tableOutput('results.table'), style = "font-size:80%")),
+                  target = 'Summary',
+                  position = 'after',
+                  select = TRUE
+        )
+    })
+    
+    # Appends Results Table tab containing results table
+    
     # Download results table
     output$dl.table <- downloadHandler(
         contentType = 'text/plain',
@@ -245,6 +277,7 @@ function(input, output) {
         }
     )
     
+    # Download summary table
     output$dl.summary <- downloadHandler(
         contentType = 'text/plain',
         filename = function() {
@@ -266,6 +299,7 @@ function(input, output) {
         }
     )
     
+    # # Download Venn diagrams
     # output$dl.figures <- downloadHandler(
     #     contentType = 'application/zip',
     #     filename = function() {
