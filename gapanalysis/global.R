@@ -2,6 +2,7 @@ library(dplyr, warn.conflicts = FALSE)
 library(rdrop2)
 library(shiny)
 library(tidyr, warn.conflicts = FALSE)
+library(rio)
 # library(VennDiagram)
 
 # Read files locally - FOR USE DURING DEVELOPMENT

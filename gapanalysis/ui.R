@@ -1,14 +1,18 @@
-fluidPage(
+fluidPage(theme = "style.css", title = 'GGI Gap Analysis Tool',
     
     # Title
-    titlePanel('GGI Gap Analysis Tool'),
-    p('This app is used to conduct gap analyses for GGI funded projects.'),
+    titlePanel(
+        fluidRow(
+            column(1, img(src = "ggilogo.png", height = "60px")),
+            column(11, "GGI Gap Analysis Tool")
+        )
+    ),
     
     sidebarLayout(
         
         # Options menu on sidebar
         sidebarPanel(
-            width = 3,
+            width = 2,
             h3('Input Names'),
             textInput('list.name', 'Dataset label', value = "User Data"),
             fileInput('inp.name.file', 'Upload list of names'),
@@ -52,6 +56,9 @@ fluidPage(
                         
                         tabPanel("Instructions",
                                  h4("Input Names"),
+                                 p("Note: This gap analysis calculator only works on taxonomic names at
+                                   the kingdom, phylum/division, class, order, family, or genus level. 
+                                   Species are not supported."),
                                  p(strong("Dataset label:"), 
                                    "Enter the name of analysis. e.g. \'NMNH Amphibians\'"),
                                  p(strong("Upload list of names:"), 

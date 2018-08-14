@@ -214,7 +214,7 @@ function(input, output) {
     output$dl.table <- downloadHandler(
         contentType = 'text/plain',
         filename = function() {
-            paste(input$list.name, "Gap Analysis.csv", sep = ' ')
+            paste(input$list.name, "Gap Analysis.tsv", sep = ' ')
         },
         content = function(file) {
             filtered.columns <- results.df() %>%
@@ -224,14 +224,18 @@ function(input, output) {
                        in_ggbn, in_genbank,
                        kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
                        family = family_gbif, genus = genus_gbif)
-            write.table(filtered.columns, file, row.names = FALSE, sep = '\t')
+            write.table(filtered.columns, file, 
+                        row.names = FALSE, 
+                        quote = FALSE, 
+                        na = '', 
+                        sep = '\t')
         }
     )
     
     output$dl.summary <- downloadHandler(
         contentType = 'text/plain',
         filename = function() {
-            paste(input$list.name, "Summary.csv", sep = ' ')
+            paste(input$list.name, "Summary.tsv", sep = ' ')
         },
         content = function(file) {
             summary.file <- summary.df() %>%
@@ -241,7 +245,11 @@ function(input, output) {
                        'New to GenBank' = total_new_to_genbank,
                        'New to Both GGBN and GenBank' = new_to_both,
                        'Already in Both GGBN and GenBank' = new_to_neither)
-            write.table(summary.file, file, row.names = FALSE, sep = '\t')
+            write.table(summary.file, file, 
+                        row.names = FALSE, 
+                        quote = FALSE, 
+                        na = '',
+                        sep = '\t')
         }
     )
     
