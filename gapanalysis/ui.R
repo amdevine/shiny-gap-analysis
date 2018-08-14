@@ -84,6 +84,11 @@ fluidPage(theme = "style.css", title = 'GGI Gap Analysis Tool',
                            "If all names are the found in the same kingdom (e.g. Animalia, Plantae), 
                            select the appropriate kingdom. This may reduce the number of 
                            extraneous results from homonymous names."),
+                         p(strong("Name status:"), 
+                           "Filter results based on the status of the names returned. e.g. Selecting 
+                           \'accepted\' will include results only for accepted names that match the 
+                           input names, and will not return any matching synonyms or unaccepted name 
+                           alternatives."),
                          h3("Results"),
                          p("Submitted names are queried in static inventory lists from GBIF, GGBN,
                            and GenBank. Names are first matched to GBIF, which returns the taxonomic
@@ -97,10 +102,10 @@ fluidPage(theme = "style.css", title = 'GGI Gap Analysis Tool',
                          p(strong("Results Table:"),
                            "Returns a table containing results of the first 100 names submitted. 
                            The \'Download Results Table\' button allows the user to download the results 
-                           for all submitted names as a comma-delimited .csv file."),
-                         p(strong("Figures:"),
-                           "Venn diagrams generated at each taxonomic level, showing the breakdown of 
-                           names submitted and their presence in GGBN and GenBank.")
+                           for all submitted names as a comma-delimited .csv file.")
+                         # p(strong("Figures:"),
+                         #   "Venn diagrams generated at each taxonomic level, showing the breakdown of 
+                         #   names submitted and their presence in GGBN and GenBank.")
                          )
                 
                 # tabPanel("Summary",
