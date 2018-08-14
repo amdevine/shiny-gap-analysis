@@ -13,7 +13,7 @@ fluidPage(theme = "style.css", title = 'GGI Gap Analysis Tool',
         # Options menu on sidebar
         sidebarPanel(
             width = 2,
-            h3('Input Names'),
+            h2('Input Names'),
             textInput('list.name', 'Dataset label', value = "User Data"),
             fileInput('inp.name.file', 'Upload list of names'),
             textAreaInput(
@@ -51,11 +51,11 @@ fluidPage(theme = "style.css", title = 'GGI Gap Analysis Tool',
         
         # Results tabs
         mainPanel(
-            h3('Results'),
+            h2('Results'),
             tabsetPanel(type = 'tabs',
                         
                         tabPanel("Instructions",
-                                 h4("Input Names"),
+                                 h3("Input Names"),
                                  p("Note: This gap analysis calculator only works on taxonomic names at
                                    the kingdom, phylum/division, class, order, family, or genus level. 
                                    Species are not supported."),
@@ -75,7 +75,7 @@ fluidPage(theme = "style.css", title = 'GGI Gap Analysis Tool',
                                    "If all names are the found in the same kingdom (e.g. Animalia, Plantae), 
                                    select the appropriate kingdom. This may reduce the number of 
                                    extraneous results from homonymous names."),
-                                 h4("Results"),
+                                 h3("Results"),
                                  p("Submitted names are queried in static inventory lists from GBIF, GGBN,
                                    and GenBank. Names are first matched to GBIF, which returns the taxonomic
                                    rank, name status, and if the name is not accepted, the accepted name.
