@@ -10,24 +10,37 @@ function(input, output) {
     
     # Filters GBIF, GGBN, and GenBank dataframes based on user input of Kingdom and Tax Rank
     filtered <- eventReactive(input$analyze, {
-        if (input$inp.taxlevel == 'All' && input$inp.kingdom == 'All') {
-            f <- gbif
-            n <- ggbn
-            k <- genbank
-        } else if (input$inp.taxlevel == 'All' && input$inp.kingdom != 'All') {
-            f <- filter(gbif, kingdom == input$inp.kingdom)
-            n <- filter(ggbn, kingdom == input$inp.kingdom)
-            k <- filter(genbank, kingdom == input$inp.kingdom)
-        } else if (input$inp.taxlevel != 'All' && input$inp.kingdom == 'All') {
-            f <- filter(gbif, rank == input$inp.taxlevel) 
-            n <- filter(ggbn, rank == input$inp.taxlevel) 
-            k <- filter(genbank, rank == input$inp.taxlevel)
-        } else {
-            f <- filter(gbif, rank == input$inp.taxlevel, kingdom == input$inp.kingdom)
-            n <- filter(ggbn, rank == input$inp.taxlevel, kingdom == input$inp.kingdom)
-            k <- filter(genbank, rank == input$inp.taxlevel, kingdom == input$inp.kingdom)
+        
+        .filterdataset <- function(x) {
+            # Filters based on tax rank specified
+            if (input$inp.taxlevel == 'All') {
+                txfilter <- !is.na(x$name)
+            } else {
+                txfilter <- x$rank == input$inp.taxlevel
+            }
+            
+            # Filters based on kingdom specified
+            if (input$inp.kingdom == 'All') {
+                kfilter <- !is.na(x$name)
+            } else {
+                kfilter <- x$kingdom == input$inp.kingdom
+            }
+            
+            # Filters based on name status, if present in dataset
+            if ("status" %in% colnames(x) && input$inp.nstatus != 'All') {
+                sfilter <- x$status == input$inp.nstatus
+            } else {
+                sfilter <- !is.na(x$name)
+            }
+            
+            filter(x, txfilter, kfilter, sfilter)
         }
-        list(gbif = f, ggbn = n, genbank = k)
+        
+        list(
+            gbif = .filterdataset(gbif), 
+            ggbn = .filterdataset(ggbn), 
+            genbank = .filterdataset(genbank)
+        )
     })
     
     # Processes list of user-inputed names

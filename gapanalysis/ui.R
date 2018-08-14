@@ -46,6 +46,15 @@ fluidPage(theme = "style.css", title = 'GGI Gap Analysis Tool',
                     sort(unique(gbif$kingdom))
                 )
             ),
+            selectInput(
+                # width = '200px',
+                'inp.nstatus', 
+                'Status of names', 
+                c(
+                    'Not Specified' = 'All',
+                    sort(unique(gbif$status))
+                )
+            ),
             actionButton('analyze', 'Run Analysis')
         ),
         
