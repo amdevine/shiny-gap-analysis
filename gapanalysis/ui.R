@@ -98,11 +98,12 @@ fluidPage(theme = "style.css", title = 'GGI Gap Analysis Tool',
                            for each name to allow the user to verify that the correct name has been queried."),
                          p(strong("Summary:"),
                            "A summary of the names entered, and how many were found to be in GBIF,
-                           GGBN, and GenBank."),
+                           GGBN, and GenBank. The \'Download Summary Table\' button allows the user to 
+                           download the counts for each taxonomic rank as a tab-delimited .tsv file."),
                          p(strong("Results Table:"),
                            "Returns a table containing results of the first 100 names submitted. 
                            The \'Download Results Table\' button allows the user to download the results 
-                           for all submitted names as a comma-delimited .csv file.")
+                           for all submitted names as a tab-delimited .tsv file.")
                          # p(strong("Figures:"),
                          #   "Venn diagrams generated at each taxonomic level, showing the breakdown of 
                          #   names submitted and their presence in GGBN and GenBank.")
