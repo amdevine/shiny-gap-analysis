@@ -16,7 +16,10 @@ genbank <- read.csv('../genbank.csv', stringsAsFactors = FALSE)
 # ggbn <- drop_read_csv('shiny/ggbn.csv', dtoken = token, stringsAsFactors = FALSE)
 # genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token, stringsAsFactors = FALSE)
 
-# Select appropriate GGBN and GenBank columns
+
+# Select appropriate columns for each dataset
+gbif <- distinct(gbif)
+
 ggbn <- ggbn[, -1]
 ggbn$rank <- tolower(ggbn$rank)
 

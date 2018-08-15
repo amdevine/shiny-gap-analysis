@@ -1,4 +1,7 @@
 function(input, output) {
+
+#-----------------------------------------------------------------------------#
+# PROCESS USER INPUT FIELDS 
     
     # Returns string with first letter of each word capitalized
     .simpleCap <- function(x) {
@@ -71,6 +74,9 @@ function(input, output) {
             return(ns)
         }
     })
+
+#-----------------------------------------------------------------------------#
+# JOIN DATA FRAMES AND CREATE SUMMARIES
     
     # Data frame containing the results of joining all the data sets
     results.df <- reactive({
@@ -152,39 +158,7 @@ function(input, output) {
                       'new_to_both' = sum(new_both),
                       'new_to_neither' = sum(new_neither))
     })
-    
-    # Label 
-    # graph.label <- eventReactive(input$analyze, { return(input$list.name) })
-    
-    # # Generates Venn diagrams at each taxonomic level depending on results.df
-    # pfig <- reactive({
-    #     hist(rnorm(100, mean = 10, sd = 1), 
-    #          main = paste(graph.label(), '- Phyla', sep = " "),
-    #          xlab = 'Phyla')})
-    # cfig <- reactive({
-    #     hist(rnorm(100, mean = 20, sd = 1), 
-    #          main = paste(graph.label(), '- Classes', sep = " "),
-    #          xlab = 'Classes')})
-    # ofig <- reactive({
-    #     hist(rnorm(100, mean = 30, sd = 1), 
-    #          main = paste(graph.label(), '- Orders', sep = " "),
-    #          xlab = 'Orders')})
-    # ffig <- reactive({
-    #     hist(rnorm(100, mean = 40, sd = 1), 
-    #          main = paste(graph.label(), '- Families', sep = " "),
-    #          xlab = 'Families')})
-    # gfig <- reactive({
-    #     hist(rnorm(100, mean = 50, sd = 1), 
-    #          main = paste(graph.label(), '- Genera', sep = " "),
-    #          xlab = 'Genera')})
-    # 
-    # # Adds Venn diagrams to the output
-    # output$venn.phyla <- renderPlot({ pfig() })
-    # output$venn.classes <- renderPlot({ cfig() })
-    # output$venn.orders <- renderPlot({ ofig() })
-    # output$venn.families <- renderPlot({ ffig() })
-    # output$venn.genera <- renderPlot({ gfig() })
-    
+
     # Creates summary of results
     output$summary.table <- renderTable({
         rank.order <- c('kingdom', 'phylum', 'class', 'order', 'family', 'genus')
@@ -223,6 +197,9 @@ function(input, output) {
         }
     })
     
+#-----------------------------------------------------------------------------#
+# DYNAMIC SUMMARY AND RESULTS TABS
+    
     # Appends Summary tab containing summary of results
     observeEvent(input$analyze, {
         removeTab(inputId = 'resultstabs',
@@ -258,6 +235,9 @@ function(input, output) {
                   select = TRUE
         )
     })
+
+#-----------------------------------------------------------------------------#
+# DOWNLOAD BUTTONS
     
     # Download results table as Excel file
     output$dl.table.xlsx <- downloadHandler(
@@ -338,6 +318,41 @@ function(input, output) {
                         sep = '\t')
         }
     )
+    
+#-----------------------------------------------------------------------------#
+# VENN DIAGRAMS - FOR FUTURE DEVELOPMENT
+    
+    # Label 
+    # graph.label <- eventReactive(input$analyze, { return(input$list.name) })
+    
+    # # Generates Venn diagrams at each taxonomic level depending on results.df
+    # pfig <- reactive({
+    #     hist(rnorm(100, mean = 10, sd = 1), 
+    #          main = paste(graph.label(), '- Phyla', sep = " "),
+    #          xlab = 'Phyla')})
+    # cfig <- reactive({
+    #     hist(rnorm(100, mean = 20, sd = 1), 
+    #          main = paste(graph.label(), '- Classes', sep = " "),
+    #          xlab = 'Classes')})
+    # ofig <- reactive({
+    #     hist(rnorm(100, mean = 30, sd = 1), 
+    #          main = paste(graph.label(), '- Orders', sep = " "),
+    #          xlab = 'Orders')})
+    # ffig <- reactive({
+    #     hist(rnorm(100, mean = 40, sd = 1), 
+    #          main = paste(graph.label(), '- Families', sep = " "),
+    #          xlab = 'Families')})
+    # gfig <- reactive({
+    #     hist(rnorm(100, mean = 50, sd = 1), 
+    #          main = paste(graph.label(), '- Genera', sep = " "),
+    #          xlab = 'Genera')})
+    # 
+    # # Adds Venn diagrams to the output
+    # output$venn.phyla <- renderPlot({ pfig() })
+    # output$venn.classes <- renderPlot({ cfig() })
+    # output$venn.orders <- renderPlot({ ofig() })
+    # output$venn.families <- renderPlot({ ffig() })
+    # output$venn.genera <- renderPlot({ gfig() })
     
     # # Download Venn diagrams
     # output$dl.figures <- downloadHandler(
