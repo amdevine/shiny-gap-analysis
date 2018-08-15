@@ -49,7 +49,7 @@ fluidPage(theme = "style.css", title = 'GGI Gap Analysis Tool',
             selectInput(
                 # width = '200px',
                 'inp.nstatus', 
-                'Status of names', 
+                'Name status', 
                 c(
                     'Not Specified' = 'All',
                     sort(unique(gbif$status))
