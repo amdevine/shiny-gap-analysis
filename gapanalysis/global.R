@@ -2,6 +2,7 @@ library(dplyr, warn.conflicts = FALSE)
 library(rdrop2)
 library(shiny)
 library(tidyr, warn.conflicts = FALSE)
+library(openxlsx)
 # library(VennDiagram)
 
 # Read files locally - FOR USE DURING DEVELOPMENT
@@ -15,7 +16,10 @@ gbif <- drop_read_csv('shiny/gbif.csv', dtoken = token, stringsAsFactors = FALSE
 ggbn <- drop_read_csv('shiny/ggbn.csv', dtoken = token, stringsAsFactors = FALSE)
 genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token, stringsAsFactors = FALSE)
 
-# Select appropriate GGBN and GenBank columns
+
+# Select appropriate columns for each dataset
+gbif <- distinct(gbif)
+
 ggbn <- ggbn[, -1]
 ggbn$rank <- tolower(ggbn$rank)
 

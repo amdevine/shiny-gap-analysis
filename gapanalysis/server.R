@@ -1,4 +1,7 @@
 function(input, output) {
+
+#-----------------------------------------------------------------------------#
+# USER INPUT FIELDS 
     
     # Returns string with first letter of each word capitalized
     .simpleCap <- function(x) {
@@ -71,6 +74,9 @@ function(input, output) {
             return(ns)
         }
     })
+
+#-----------------------------------------------------------------------------#
+# DATA FRAMES AND SUMMARY TABLES
     
     # Data frame containing the results of joining all the data sets
     results.df <- reactive({
@@ -107,20 +113,20 @@ function(input, output) {
             gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
             filter(name != '') %>%
             select(name) %>%
-            unique()
+            distinct()
         ggbn.names <- ggbn.names$name
         genbank.names <- genbank %>%
             select(kingdom, phylum, class, order, family, genus) %>%
             gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
             filter(name != '') %>%
             select(name) %>%
-            unique()
+            distinct()
         genbank.names <- genbank.names$name
         sub.data <- results.df() %>%
             select(kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
                    family = family_gbif, genus = genus_gbif) %>%
             gather(key = 'rank', value = 'name', na.rm = TRUE) %>%
-            unique() %>%
+            distinct() %>%
             filter(name != '')
         sub.data <- sub.data %>%
             mutate(in_ggbn = ifelse(name %in% ggbn.names, TRUE, FALSE),
@@ -152,76 +158,55 @@ function(input, output) {
                       'new_to_both' = sum(new_both),
                       'new_to_neither' = sum(new_neither))
     })
-    
-    # Label 
-    graph.label <- eventReactive(input$analyze, { return(input$list.name) })
-    
-    # Generates Venn diagrams at each taxonomic level depending on results.df
-    pfig <- reactive({
-        hist(rnorm(100, mean = 10, sd = 1), 
-             main = paste(graph.label(), '- Phyla', sep = " "),
-             xlab = 'Phyla')})
-    cfig <- reactive({
-        hist(rnorm(100, mean = 20, sd = 1), 
-             main = paste(graph.label(), '- Classes', sep = " "),
-             xlab = 'Classes')})
-    ofig <- reactive({
-        hist(rnorm(100, mean = 30, sd = 1), 
-             main = paste(graph.label(), '- Orders', sep = " "),
-             xlab = 'Orders')})
-    ffig <- reactive({
-        hist(rnorm(100, mean = 40, sd = 1), 
-             main = paste(graph.label(), '- Families', sep = " "),
-             xlab = 'Families')})
-    gfig <- reactive({
-        hist(rnorm(100, mean = 50, sd = 1), 
-             main = paste(graph.label(), '- Genera', sep = " "),
-             xlab = 'Genera')})
-    
-    # Adds Venn diagrams to the output
-    output$venn.phyla <- renderPlot({ pfig() })
-    output$venn.classes <- renderPlot({ cfig() })
-    output$venn.orders <- renderPlot({ ofig() })
-    output$venn.families <- renderPlot({ ffig() })
-    output$venn.genera <- renderPlot({ gfig() })
-    
-    # Creates summary of results
-    output$summary.table <- renderTable({
+
+    # Creates summary table for display and download
+    summary.df.table <- reactive({
         rank.order <- c('kingdom', 'phylum', 'class', 'order', 'family', 'genus')
-        summary.display <- summary.df() %>%
-            select('Rank' = rank,
-                   'Total' = total,
-                   'New to GGBN' = total_new_to_ggbn,
-                   'New to GenBank' = total_new_to_genbank,
-                   'New to Both GGBN and GenBank' = new_to_both,
-                   'Already in Both GGBN and GenBank' = new_to_neither)
-        summary.display
+        select(summary.df(),
+               'Rank' = rank,
+               'Total' = total,
+               'New to GGBN' = total_new_to_ggbn,
+               'New to GenBank' = total_new_to_genbank,
+               'New to Both GGBN and GenBank' = new_to_both,
+               'Already in Both GGBN and GenBank' = new_to_neither)
     })
     
-    # Creates results table of results
+    # Adds summary display table to output
+    output$summary.table <- renderTable({ summary.df.table() })
+    
+    # Creates results table for display and download
+    results.df.table <- reactive({
+        results.df() %>%
+        mutate(in_ggbn = ifelse(is.na(phylum_ggbn), "No", "Yes"),
+               in_genbank = ifelse(is.na(phylum_genbank), "No", "Yes"),
+               name_status = replace(name_status, is.na(name_status), "NOT FOUND")) %>%
+        select('Submitted Name' = submitted_name,
+               Rank = rank,
+               'Name Status' = name_status,
+               'Accepted Name' = accepted_name,
+               'Queried Name' = qn,
+               'In GGBN' = in_ggbn,
+               'In GenBank' = in_genbank,
+               Kingdom = kingdom,
+               Phylum = phylum_gbif,
+               Class = class_gbif,
+               Order = order_gbif,
+               Family = family_gbif,
+               Genus = genus_gbif)
+    })
+    
+    # Adds results table to output
     output$results.table <- renderTable({
-        table.data <- results.df() %>%
-            mutate(in_ggbn = ifelse(is.na(phylum_ggbn), "No", "Yes"),
-                   in_genbank = ifelse(is.na(phylum_genbank), "No", "Yes")) %>%
-            select('Submitted Name' = submitted_name,
-                   Rank = rank,
-                   'Name Status' = name_status,
-                   'Accepted Name' = accepted_name,
-                   'Queried Name' = qn,
-                   'In GGBN' = in_ggbn,
-                   'In GenBank' = in_genbank,
-                   Kingdom = kingdom,
-                   Phylum = phylum_gbif,
-                   Class = class_gbif,
-                   Order = order_gbif,
-                   Family = family_gbif,
-                   Genus = genus_gbif)
-        if (nrow(table.data) > 100) {
-            return(table.data[1:100,])
+        if (nrow(results.df.table()) > 100) {
+            return(results.df.table()[1:100,])
         } else {
-            return(table.data)
+            return(results.df.table())
         }
     })
+    
+    
+#-----------------------------------------------------------------------------#
+# DYNAMIC SUMMARY AND RESULTS TABS
     
     # Appends Summary tab containing summary of results
     observeEvent(input$analyze, {
@@ -229,8 +214,11 @@ function(input, output) {
                   target = 'Summary')
         insertTab(inputId = 'resultstabs', 
                   tabPanel("Summary",
-                           downloadButton('dl.summary', 
-                                          'Download Summary Table', 
+                           downloadButton('dl.summary.xlsx', 
+                                          'Download Summary Table (.xlsx)', 
+                                          style = "margin-bottom:1em;margin-top:1em"),
+                           downloadButton('dl.summary.tsv', 
+                                          'Download Summary Table (.tsv)', 
                                           style = "margin-bottom:1em;margin-top:1em"),
                            tableOutput('summary.table')),
                   target = 'Instructions',
@@ -243,8 +231,11 @@ function(input, output) {
                   target = 'Results Table')
         insertTab(inputId = 'resultstabs',
                   tabPanel("Results Table", 
-                           downloadButton('dl.table', 
-                                          'Download Results Table', 
+                           downloadButton('dl.table.xlsx', 
+                                          'Download Results Table (.xlsx)', 
+                                          style = "margin-bottom:1em;margin-top:1em"),
+                           downloadButton('dl.table.tsv', 
+                                          'Download Results Table (.tsv)', 
                                           style = "margin-bottom:1em;margin-top:1em"),
                            div(tableOutput('results.table'), style = "font-size:80%")),
                   target = 'Summary',
@@ -252,52 +243,94 @@ function(input, output) {
                   select = TRUE
         )
     })
+
+#-----------------------------------------------------------------------------#
+# DOWNLOAD BUTTONS
     
-    # Appends Results Table tab containing results table
+    # Download results table as Excel file
+    output$dl.table.xlsx <- downloadHandler(
+        filename = function() {
+            paste(input$list.name, "Gap Analysis.xlsx", sep = ' ')
+        },
+        content = function(file) {
+            outputtable <- arrange(results.df.table(),
+                                   Kingdom, Phylum, Class, Order, 
+                                   Family, Genus)
+            write.xlsx(outputtable, file = file, rowNames = FALSE)
+        }
+    )
     
-    # Download results table
-    output$dl.table <- downloadHandler(
+    # Download results table as .tsv file
+    output$dl.table.tsv <- downloadHandler(
         contentType = 'text/plain',
         filename = function() {
             paste(input$list.name, "Gap Analysis.tsv", sep = ' ')
         },
         content = function(file) {
-            filtered.columns <- results.df() %>%
-                mutate(in_ggbn = case_when(is.na(phylum_ggbn) ~ "no", TRUE ~ "yes"),
-                       in_genbank = case_when(is.na(phylum_genbank) ~ "no", TRUE ~ "yes")) %>%
-                select(submitted_name, rank, name_status, accepted_name, queried_name = qn,
-                       in_ggbn, in_genbank,
-                       kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
-                       family = family_gbif, genus = genus_gbif)
-            write.table(filtered.columns, file, 
-                        row.names = FALSE, 
-                        quote = FALSE, 
-                        na = '', 
-                        sep = '\t')
+            outputtable <- arrange(results.df.table(),
+                                   Kingdom, Phylum, Class, Order, 
+                                   Family, Genus)
+            write.table(outputtable, file, row.names = FALSE, 
+                        quote = FALSE, na = '', sep = '\t')
         }
     )
     
-    # Download summary table
-    output$dl.summary <- downloadHandler(
+    # Download summary table as .xlsx file
+    output$dl.summary.xlsx <- downloadHandler(
+        filename = function() {
+            paste(input$list.name, "Summary.xlsx", sep = ' ')
+        },
+        content = function(file) {
+            write.xlsx(summary.df.table(), file = file, rowNames = FALSE)
+        }
+    )
+    
+    # Download summary table as .tsv file
+    output$dl.summary.tsv <- downloadHandler(
         contentType = 'text/plain',
         filename = function() {
             paste(input$list.name, "Summary.tsv", sep = ' ')
         },
         content = function(file) {
-            summary.file <- summary.df() %>%
-                select('Rank' = rank,
-                       'Total' = total,
-                       'New to GGBN' = total_new_to_ggbn,
-                       'New to GenBank' = total_new_to_genbank,
-                       'New to Both GGBN and GenBank' = new_to_both,
-                       'Already in Both GGBN and GenBank' = new_to_neither)
-            write.table(summary.file, file, 
-                        row.names = FALSE, 
-                        quote = FALSE, 
-                        na = '',
-                        sep = '\t')
+            write.table(summary.df.table(), file, row.names = FALSE, 
+                        quote = FALSE, na = '', sep = '\t')
         }
     )
+    
+#-----------------------------------------------------------------------------#
+# VENN DIAGRAMS - FOR FUTURE DEVELOPMENT
+    
+    # Label 
+    # graph.label <- eventReactive(input$analyze, { return(input$list.name) })
+    
+    # # Generates Venn diagrams at each taxonomic level depending on results.df
+    # pfig <- reactive({
+    #     hist(rnorm(100, mean = 10, sd = 1), 
+    #          main = paste(graph.label(), '- Phyla', sep = " "),
+    #          xlab = 'Phyla')})
+    # cfig <- reactive({
+    #     hist(rnorm(100, mean = 20, sd = 1), 
+    #          main = paste(graph.label(), '- Classes', sep = " "),
+    #          xlab = 'Classes')})
+    # ofig <- reactive({
+    #     hist(rnorm(100, mean = 30, sd = 1), 
+    #          main = paste(graph.label(), '- Orders', sep = " "),
+    #          xlab = 'Orders')})
+    # ffig <- reactive({
+    #     hist(rnorm(100, mean = 40, sd = 1), 
+    #          main = paste(graph.label(), '- Families', sep = " "),
+    #          xlab = 'Families')})
+    # gfig <- reactive({
+    #     hist(rnorm(100, mean = 50, sd = 1), 
+    #          main = paste(graph.label(), '- Genera', sep = " "),
+    #          xlab = 'Genera')})
+    # 
+    # # Adds Venn diagrams to the output
+    # output$venn.phyla <- renderPlot({ pfig() })
+    # output$venn.classes <- renderPlot({ cfig() })
+    # output$venn.orders <- renderPlot({ ofig() })
+    # output$venn.families <- renderPlot({ ffig() })
+    # output$venn.genera <- renderPlot({ gfig() })
     
     # # Download Venn diagrams
     # output$dl.figures <- downloadHandler(
