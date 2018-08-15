@@ -154,36 +154,36 @@ function(input, output) {
     })
     
     # Label 
-    graph.label <- eventReactive(input$analyze, { return(input$list.name) })
+    # graph.label <- eventReactive(input$analyze, { return(input$list.name) })
     
-    # Generates Venn diagrams at each taxonomic level depending on results.df
-    pfig <- reactive({
-        hist(rnorm(100, mean = 10, sd = 1), 
-             main = paste(graph.label(), '- Phyla', sep = " "),
-             xlab = 'Phyla')})
-    cfig <- reactive({
-        hist(rnorm(100, mean = 20, sd = 1), 
-             main = paste(graph.label(), '- Classes', sep = " "),
-             xlab = 'Classes')})
-    ofig <- reactive({
-        hist(rnorm(100, mean = 30, sd = 1), 
-             main = paste(graph.label(), '- Orders', sep = " "),
-             xlab = 'Orders')})
-    ffig <- reactive({
-        hist(rnorm(100, mean = 40, sd = 1), 
-             main = paste(graph.label(), '- Families', sep = " "),
-             xlab = 'Families')})
-    gfig <- reactive({
-        hist(rnorm(100, mean = 50, sd = 1), 
-             main = paste(graph.label(), '- Genera', sep = " "),
-             xlab = 'Genera')})
-    
-    # Adds Venn diagrams to the output
-    output$venn.phyla <- renderPlot({ pfig() })
-    output$venn.classes <- renderPlot({ cfig() })
-    output$venn.orders <- renderPlot({ ofig() })
-    output$venn.families <- renderPlot({ ffig() })
-    output$venn.genera <- renderPlot({ gfig() })
+    # # Generates Venn diagrams at each taxonomic level depending on results.df
+    # pfig <- reactive({
+    #     hist(rnorm(100, mean = 10, sd = 1), 
+    #          main = paste(graph.label(), '- Phyla', sep = " "),
+    #          xlab = 'Phyla')})
+    # cfig <- reactive({
+    #     hist(rnorm(100, mean = 20, sd = 1), 
+    #          main = paste(graph.label(), '- Classes', sep = " "),
+    #          xlab = 'Classes')})
+    # ofig <- reactive({
+    #     hist(rnorm(100, mean = 30, sd = 1), 
+    #          main = paste(graph.label(), '- Orders', sep = " "),
+    #          xlab = 'Orders')})
+    # ffig <- reactive({
+    #     hist(rnorm(100, mean = 40, sd = 1), 
+    #          main = paste(graph.label(), '- Families', sep = " "),
+    #          xlab = 'Families')})
+    # gfig <- reactive({
+    #     hist(rnorm(100, mean = 50, sd = 1), 
+    #          main = paste(graph.label(), '- Genera', sep = " "),
+    #          xlab = 'Genera')})
+    # 
+    # # Adds Venn diagrams to the output
+    # output$venn.phyla <- renderPlot({ pfig() })
+    # output$venn.classes <- renderPlot({ cfig() })
+    # output$venn.orders <- renderPlot({ ofig() })
+    # output$venn.families <- renderPlot({ ffig() })
+    # output$venn.genera <- renderPlot({ gfig() })
     
     # Creates summary of results
     output$summary.table <- renderTable({
@@ -229,8 +229,11 @@ function(input, output) {
                   target = 'Summary')
         insertTab(inputId = 'resultstabs', 
                   tabPanel("Summary",
-                           downloadButton('dl.summary', 
-                                          'Download Summary Table', 
+                           downloadButton('dl.summary.xlsx', 
+                                          'Download Summary Table (.xlsx)', 
+                                          style = "margin-bottom:1em;margin-top:1em"),
+                           downloadButton('dl.summary.tsv', 
+                                          'Download Summary Table (.tsv)', 
                                           style = "margin-bottom:1em;margin-top:1em"),
                            tableOutput('summary.table')),
                   target = 'Instructions',
@@ -243,8 +246,11 @@ function(input, output) {
                   target = 'Results Table')
         insertTab(inputId = 'resultstabs',
                   tabPanel("Results Table", 
-                           downloadButton('dl.table', 
-                                          'Download Results Table', 
+                           downloadButton('dl.table.xlsx', 
+                                          'Download Results Table (.xlsx)', 
+                                          style = "margin-bottom:1em;margin-top:1em"),
+                           downloadButton('dl.table.tsv', 
+                                          'Download Results Table (.tsv)', 
                                           style = "margin-bottom:1em;margin-top:1em"),
                            div(tableOutput('results.table'), style = "font-size:80%")),
                   target = 'Summary',
@@ -253,10 +259,26 @@ function(input, output) {
         )
     })
     
-    # Appends Results Table tab containing results table
+    # Download results table as Excel file
+    output$dl.table.xlsx <- downloadHandler(
+        filename = function() {
+            paste(input$list.name, "Gap Analysis.xlsx", sep = ' ')
+        },
+        content = function(file) {
+            filtered.columns <- results.df() %>%
+                mutate(in_ggbn = case_when(is.na(phylum_ggbn) ~ "no", TRUE ~ "yes"),
+                       in_genbank = case_when(is.na(phylum_genbank) ~ "no", TRUE ~ "yes")) %>%
+                select(submitted_name, rank, name_status, accepted_name, queried_name = qn,
+                       in_ggbn, in_genbank,
+                       kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
+                       family = family_gbif, genus = genus_gbif) %>%
+                arrange(kingdom, phylum, class, order, family, genus)
+            write.xlsx(filtered.columns, file = file, rowNames = FALSE)
+        }
+    )
     
-    # Download results table
-    output$dl.table <- downloadHandler(
+    # Download results table as .tsv file
+    output$dl.table.tsv <- downloadHandler(
         contentType = 'text/plain',
         filename = function() {
             paste(input$list.name, "Gap Analysis.tsv", sep = ' ')
@@ -273,13 +295,30 @@ function(input, output) {
             write.table(filtered.columns, file, 
                         row.names = FALSE, 
                         quote = FALSE, 
-                        na = '', 
+                        na = '',
                         sep = '\t')
         }
     )
     
-    # Download summary table
-    output$dl.summary <- downloadHandler(
+    # Download summary table as .xlsx file
+    output$dl.summary.xlsx <- downloadHandler(
+        filename = function() {
+            paste(input$list.name, "Summary.xlsx", sep = ' ')
+        },
+        content = function(file) {
+            summary.file <- summary.df() %>%
+                select('Rank' = rank,
+                       'Total' = total,
+                       'New to GGBN' = total_new_to_ggbn,
+                       'New to GenBank' = total_new_to_genbank,
+                       'New to Both GGBN and GenBank' = new_to_both,
+                       'Already in Both GGBN and GenBank' = new_to_neither)
+            write.xlsx(summary.file, file = file, rowNames = FALSE)
+        }
+    )
+    
+    # Download summary table as .tsv file
+    output$dl.summary.tsv <- downloadHandler(
         contentType = 'text/plain',
         filename = function() {
             paste(input$list.name, "Summary.tsv", sep = ' ')

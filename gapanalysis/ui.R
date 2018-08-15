@@ -109,18 +109,6 @@ fluidPage(theme = "style.css", title = 'GGI Gap Analysis Tool',
                          #   names submitted and their presence in GGBN and GenBank.")
                          )
                 
-                # tabPanel("Summary",
-                #          downloadButton('dl.summary',
-                #                         'Download Summary Table',
-                #                         style = "margin-bottom:1em;margin-top:1em"),
-                #          tableOutput('summary.table')),
-                # 
-                # tabPanel("Results Table",
-                #          downloadButton('dl.table',
-                #                         'Download Results Table',
-                #                         style = "margin-bottom:1em;margin-top:1em"),
-                #          div(tableOutput('results.table'), style = "font-size:80%"))
-                
                 # tabPanel("Figures",
                 #          # downloadButton('dl.figures',
                 #          #                'Download Figures',
