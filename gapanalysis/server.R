@@ -268,7 +268,8 @@ function(input, output) {
                 select(submitted_name, rank, name_status, accepted_name, queried_name = qn,
                        in_ggbn, in_genbank,
                        kingdom, phylum = phylum_gbif, class = class_gbif, order = order_gbif,
-                       family = family_gbif, genus = genus_gbif)
+                       family = family_gbif, genus = genus_gbif) %>%
+                arrange(kingdom, phylum, class, order, family, genus)
             write.table(filtered.columns, file, 
                         row.names = FALSE, 
                         quote = FALSE, 
