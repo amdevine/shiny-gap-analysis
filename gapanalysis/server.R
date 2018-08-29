@@ -214,12 +214,6 @@ function(input, output) {
                   target = 'Summary')
         insertTab(inputId = 'resultstabs', 
                   tabPanel("Summary",
-                           downloadButton('dl.summary.xlsx', 
-                                          'Download Summary Table (.xlsx)', 
-                                          style = "margin-bottom:1em;margin-top:1em"),
-                           downloadButton('dl.summary.tsv', 
-                                          'Download Summary Table (.tsv)', 
-                                          style = "margin-bottom:1em;margin-top:1em"),
                            tableOutput('summary.table')),
                   target = 'Instructions',
                   position = 'after'
@@ -231,32 +225,54 @@ function(input, output) {
                   target = 'Results Table')
         insertTab(inputId = 'resultstabs',
                   tabPanel("Results Table", 
-                           downloadButton('dl.table.xlsx', 
-                                          'Download Results Table (.xlsx)', 
-                                          style = "margin-bottom:1em;margin-top:1em"),
-                           downloadButton('dl.table.tsv', 
-                                          'Download Results Table (.tsv)', 
-                                          style = "margin-bottom:1em;margin-top:1em"),
                            div(tableOutput('results.table'), style = "font-size:80%")),
                   target = 'Summary',
                   position = 'after',
                   select = TRUE
         )
     })
+    
+    # Appends Downloads tab containing buttons to download summary and results
+    observeEvent(input$analyze, {
+        removeTab(inputId = 'resultstabs',
+                  target = 'Download Results')
+        insertTab(inputId = 'resultstabs',
+                  tabPanel("Download Results",
+                           downloadButton('dl.all.xlsx',
+                                          'Download All Results (.xlsx)',
+                                          style = "margin-bottom:1em;margin-top:1em"),
+                           downloadButton('dl.summary.tsv', 
+                                          'Download Summary Table (.tsv)', 
+                                          style = "margin-bottom:1em;margin-top:1em"),
+                           downloadButton('dl.table.tsv', 
+                                          'Download Results Table (.tsv)', 
+                                          style = "margin-bottom:1em;margin-top:1em")
+                           
+                           ),
+                  target = 'Results Table',
+                  position = 'after'
+                  
+    )})
+    
 
 #-----------------------------------------------------------------------------#
 # DOWNLOAD BUTTONS
     
-    # Download results table as Excel file
-    output$dl.table.xlsx <- downloadHandler(
+    # Download summary table and results table as Excel file
+    output$dl.all.xlsx <- downloadHandler(
         filename = function() {
             paste(input$list.name, "Gap Analysis.xlsx", sep = ' ')
         },
         content = function(file) {
+            wb <- createWorkbook(creator = "GGI Gap Analysis Tool")
+            addWorksheet(wb, "summary")
+            writeData(wb, sheet = 'summary', summary.df.table(), rowNames = FALSE)
+            addWorksheet(wb, "results")
             outputtable <- arrange(results.df.table(),
                                    Kingdom, Phylum, Class, Order, 
                                    Family, Genus)
-            write.xlsx(outputtable, file = file, rowNames = FALSE)
+            writeData(wb, sheet = 'results', outputtable, rowNames = FALSE)
+            saveWorkbook(wb, file = file)
         }
     )
     
@@ -272,16 +288,6 @@ function(input, output) {
                                    Family, Genus)
             write.table(outputtable, file, row.names = FALSE, 
                         quote = FALSE, na = '', sep = '\t')
-        }
-    )
-    
-    # Download summary table as .xlsx file
-    output$dl.summary.xlsx <- downloadHandler(
-        filename = function() {
-            paste(input$list.name, "Summary.xlsx", sep = ' ')
-        },
-        content = function(file) {
-            write.xlsx(summary.df.table(), file = file, rowNames = FALSE)
         }
     )
     
