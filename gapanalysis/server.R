@@ -204,57 +204,6 @@ function(input, output) {
         }
     })
     
-    
-#-----------------------------------------------------------------------------#
-# DYNAMIC SUMMARY AND RESULTS TABS
-    
-    # Appends Summary tab containing summary of results
-    observeEvent(input$analyze, {
-        removeTab(inputId = 'resultstabs',
-                  target = 'Summary')
-        insertTab(inputId = 'resultstabs', 
-                  tabPanel("Summary",
-                           tableOutput('summary.table')),
-                  target = 'Instructions',
-                  position = 'after'
-    )})
-        
-    # Appends Results Table tab containing results table
-    observeEvent(input$analyze, {
-        removeTab(inputId = 'resultstabs',
-                  target = 'Results Table')
-        insertTab(inputId = 'resultstabs',
-                  tabPanel("Results Table", 
-                           div(tableOutput('results.table'), style = "font-size:80%")),
-                  target = 'Summary',
-                  position = 'after',
-                  select = TRUE
-        )
-    })
-    
-    # Appends Downloads tab containing buttons to download summary and results
-    observeEvent(input$analyze, {
-        removeTab(inputId = 'resultstabs',
-                  target = 'Download Results')
-        insertTab(inputId = 'resultstabs',
-                  tabPanel("Download Results",
-                           downloadButton('dl.all.xlsx',
-                                          'Download All Results (.xlsx)',
-                                          style = "margin-bottom:1em;margin-top:1em"),
-                           downloadButton('dl.summary.tsv', 
-                                          'Download Summary Table (.tsv)', 
-                                          style = "margin-bottom:1em;margin-top:1em"),
-                           downloadButton('dl.table.tsv', 
-                                          'Download Results Table (.tsv)', 
-                                          style = "margin-bottom:1em;margin-top:1em")
-                           
-                           ),
-                  target = 'Results Table',
-                  position = 'after'
-                  
-    )})
-    
-
 #-----------------------------------------------------------------------------#
 # DOWNLOAD BUTTONS
     
