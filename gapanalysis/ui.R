@@ -45,9 +45,9 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
     ),
     
     tabPanel(id = "inp", title = "Input",
-        h2('Input Names'),
         fluidRow(
-        column(6,
+        column(4,
+            h2("Input Names"),
             textInput('list.name', 'Dataset label', value = "User Data"),
             fileInput('inp.name.file', 'Upload list of names'),
             textAreaInput(
@@ -56,9 +56,11 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                placeholder = 'One name per row',
                # width = '150px',
                height = '100px'
-            )
+            ),
+            actionButton('analyze', 'Run Analysis')
         ),
-        column(6,
+        column(4,
+            h2("Name Options"),
             selectInput(
                 # width = '200px,',
                 'inp.taxlevel', 
@@ -75,25 +77,59 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
             ),
             selectInput(
                 # width = '200px',
-                'inp.kingdom', 
-                'Kingdom of names', 
-                c(
-                    'Not Specified' = 'All',
-                    sort(unique(gbif$kingdom))
-                )
-            ),
-            selectInput(
-                # width = '200px',
                 'inp.nstatus', 
                 'Name status', 
                 c(
                     'Not Specified' = 'All',
                     sort(unique(gbif$status))
                 )
-            ),
-            actionButton('analyze', 'Run Analysis')
             )
-         )
+        ),
+        column(4,
+            h2("Taxonomic Filtering"),
+            p("Limit results to particular taxa"),
+            selectInput(
+               'inp.kingdom', 
+               'Kingdom', 
+               c(
+                   'Not Specified' = 'All',
+                   sort(unique(gbif$kingdom))
+               )
+            ),
+            selectInput(
+                'inp.phylum', 
+                'Phylum', 
+                c(
+                    'Not Specified' = 'All',
+                    sort(unique(gbif$phylum))
+                )
+            ),
+            selectInput(
+                'inp.class', 
+                'Class', 
+                c(
+                    'Not Specified' = 'All',
+                    sort(unique(gbif$class))
+                )
+            ),
+            selectInput(
+                'inp.order', 
+                'Order', 
+                c(
+                    'Not Specified' = 'All',
+                    sort(unique(gbif$order))
+                )
+            ),
+            selectInput(
+                'inp.family', 
+                'Family', 
+                c(
+                    'Not Specified' = 'All',
+                    sort(unique(gbif$family))
+                )
+            )
+        )
+        )
     ),
     
     tabPanel(id = "summary", title = "Results Summary",
