@@ -1,7 +1,7 @@
-function(input, output) {
+function(input, output, session) {
 
 #-----------------------------------------------------------------------------#
-# USER INPUT FIELDS 
+# FUNCTIONS
     
     # Returns string with first letter of each word capitalized
     .simpleCap <- function(x) {
@@ -10,6 +10,97 @@ function(input, output) {
         paste(toupper(substring(s, 1, 1)), substring(s, 2),
               sep = "", collapse = " ")
     }
+    
+    # Returns a data frame filtered according to the options specified
+    filterinputoptions <- function(nameoptions, selectedtaxa) {
+        if(selectedtaxa$kin != 'All') {
+            nameoptions <- filter(nameoptions, kingdom == selectedtaxa$kin)
+        }
+        if(selectedtaxa$phy != 'All') {
+            nameoptions <- filter(nameoptions, phylum == selectedtaxa$phy)
+        }
+        if(selectedtaxa$cla != 'All') {
+            nameoptions <- filter(nameoptions, class == selectedtaxa$cla)
+        }
+        if(selectedtaxa$ord != 'All') {
+            nameoptions <- filter(nameoptions, order == selectedtaxa$ord)
+        }
+        if(selectedtaxa$fam != 'All') {
+            nameoptions <- filter(nameoptions, family == selectedtaxa$fam)
+        }
+        nameoptions    
+    }
+    
+    # Updates the taxonomic options lists
+    updatelists <- function(filtoptions, taxfilt) {
+        print('updatelists called')
+        tf <- isolate(reactiveValuesToList(taxfilt))
+        updateSelectInput(session = session, 
+                          inputId = 'inp.kingdom',
+                          choices = c('Not Specified' = 'All',
+                                      unique(filterinputoptions(filtoptions, tf)$kingdom)),
+                          selected = tf$kin)
+        updateSelectInput(session = session, 
+                          inputId = 'inp.phylum',
+                          choices = c('Not Specified' = 'All',
+                                      unique(filterinputoptions(filtoptions, tf)$phylum)),
+                          selected = tf$phy)
+        updateSelectInput(session = session, 
+                          inputId = 'inp.class',
+                          choices = c('Not Specified' = 'All',
+                                      unique(filterinputoptions(filtoptions, tf)$class)),
+                          selected = tf$cla)
+        updateSelectInput(session = session, 
+                          inputId = 'inp.order',
+                          choices = c('Not Specified' = 'All',
+                                      unique(filterinputoptions(filtoptions, tf)$order)),
+                          selected = tf$ord)
+        updateSelectInput(session = session, 
+                          inputId = 'inp.family',
+                          choices = c('Not Specified' = 'All',
+                                      unique(filterinputoptions(filtoptions, tf)$family)),
+                          selected = tf$fam)
+    }
+    
+    
+    
+#-----------------------------------------------------------------------------#
+# TAXONOMIC FILTERING
+    
+    filtoptions <- gbif %>%
+        select(kingdom, phylum, class, order, family) %>%
+        distinct() %>%
+        arrange(kingdom, phylum, class, order, family)
+
+    taxfilt <- reactiveValues(kin = 'All', phy = 'All', cla = 'All', 
+                              ord = 'All', fam = 'All')
+
+    observeEvent(input$inp.kingdom, { 
+        print('kingdom observed')
+        taxfilt$kin <- input$inp.kingdom 
+        updatelists(filtoptions, taxfilt)
+    })
+    observeEvent(input$inp.phylum, { 
+        print('phylum observed')
+        taxfilt$phy <- input$inp.phylum
+        updatelists(filtoptions, taxfilt)
+    })
+    observeEvent(input$inp.class, { 
+        print('class observed')
+        taxfilt$cla <- input$inp.class
+        updatelists(filtoptions, taxfilt)
+    })
+    observeEvent(input$inp.order, { 
+        taxfilt$ord <- input$inp.order
+        updatelists(filtoptions, taxfilt)
+    })
+    observeEvent(input$inp.family, { 
+        taxfilt$fam <- input$inp.family
+        updatelists(filtoptions, taxfilt)
+    })
+        
+#-----------------------------------------------------------------------------#
+# NAME INPUT FIELDS 
     
     # Filters GBIF, GGBN, and GenBank dataframes based on user input of Kingdom and Tax Rank
     filtered <- eventReactive(input$analyze, {

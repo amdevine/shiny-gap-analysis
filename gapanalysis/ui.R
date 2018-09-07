@@ -46,89 +46,89 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
     
     tabPanel(id = "inp", title = "Input",
         fluidRow(
-        column(4,
-            h2("Input Names"),
-            textInput('list.name', 'Dataset label', value = "User Data"),
-            fileInput('inp.name.file', 'Upload list of names'),
-            textAreaInput(
-               'inp.name.list', 
-               'OR enter list of names',
-               placeholder = 'One name per row',
-               # width = '150px',
-               height = '100px'
+            column(4,
+                h2("Input Names"),
+                textInput('list.name', 'Dataset label', value = "User Data"),
+                fileInput('inp.name.file', 'Upload list of names'),
+                textAreaInput(
+                   'inp.name.list', 
+                   'OR enter list of names',
+                   placeholder = 'One name per row',
+                   # width = '150px',
+                   height = '100px'
+                ),
+                actionButton('analyze', 'Run Analysis')
             ),
-            actionButton('analyze', 'Run Analysis')
-        ),
-        column(4,
-            h2("Name Options"),
-            selectInput(
-                # width = '200px,',
-                'inp.taxlevel', 
-                'Taxonomic rank of names', 
-                c(
-                   'Not Specified' = 'All',
-                   'Kingdom' = 'kingdom',
-                   "Phylum/Division" = 'phylum',
-                   'Class' = 'class',
-                   'Order' = 'order',
-                   'Family' = 'family',
-                   'Genus' = 'genus'
+            column(4,
+                h2("Name Options"),
+                selectInput(
+                    # width = '200px,',
+                    'inp.taxlevel', 
+                    'Taxonomic rank of names', 
+                    c(
+                       'Not Specified' = 'All',
+                       'Kingdom' = 'kingdom',
+                       "Phylum/Division" = 'phylum',
+                       'Class' = 'class',
+                       'Order' = 'order',
+                       'Family' = 'family',
+                       'Genus' = 'genus'
+                    )
+                ),
+                selectInput(
+                    # width = '200px',
+                    'inp.nstatus', 
+                    'Name status', 
+                    c(
+                        'Not Specified' = 'All',
+                        sort(unique(gbif$status))
+                    )
                 )
             ),
-            selectInput(
-                # width = '200px',
-                'inp.nstatus', 
-                'Name status', 
-                c(
-                    'Not Specified' = 'All',
-                    sort(unique(gbif$status))
+            column(4,
+                h2("Taxonomic Filtering"),
+                p("Limit results to particular taxa"),
+                selectInput(
+                   'inp.kingdom', 
+                   'Kingdom', 
+                   c(
+                       'Not Specified' = 'All',
+                       sort(unique(gbif$kingdom))
+                   )
+                ),
+                selectInput(
+                    'inp.phylum', 
+                    'Phylum', 
+                    c(
+                        'Not Specified' = 'All',
+                        sort(unique(gbif$phylum))
+                    )
+                ),
+                selectInput(
+                    'inp.class', 
+                    'Class', 
+                    c(
+                        'Not Specified' = 'All',
+                        sort(unique(gbif$class))
+                    )
+                ),
+                selectInput(
+                    'inp.order', 
+                    'Order', 
+                    c(
+                        'Not Specified' = 'All',
+                        sort(unique(gbif$order))
+                    )
+                ),
+                selectInput(
+                    'inp.family', 
+                    'Family', 
+                    c(
+                        'Not Specified' = 'All',
+                        sort(unique(gbif$family))
+                    )
                 )
             )
-        ),
-        column(4,
-            h2("Taxonomic Filtering"),
-            p("Limit results to particular taxa"),
-            selectInput(
-               'inp.kingdom', 
-               'Kingdom', 
-               c(
-                   'Not Specified' = 'All',
-                   sort(unique(gbif$kingdom))
-               )
-            ),
-            selectInput(
-                'inp.phylum', 
-                'Phylum', 
-                c(
-                    'Not Specified' = 'All',
-                    sort(unique(gbif$phylum))
-                )
-            ),
-            selectInput(
-                'inp.class', 
-                'Class', 
-                c(
-                    'Not Specified' = 'All',
-                    sort(unique(gbif$class))
-                )
-            ),
-            selectInput(
-                'inp.order', 
-                'Order', 
-                c(
-                    'Not Specified' = 'All',
-                    sort(unique(gbif$order))
-                )
-            ),
-            selectInput(
-                'inp.family', 
-                'Family', 
-                c(
-                    'Not Specified' = 'All',
-                    sort(unique(gbif$family))
-                )
-            )
-        )
         )
     ),
     
