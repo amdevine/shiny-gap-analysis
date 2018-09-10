@@ -11,6 +11,7 @@ function(input, output, session) {
               sep = "", collapse = " ")
     }
     
+    # Returns a list of taxonomic names from GBIF at a specified rank
     .listchoices <- function(nameoptions, filtrank) {
         if(filtrank == 'All') {
             return(c('None Selected' = 'All'))
@@ -29,12 +30,13 @@ function(input, output, session) {
                  select(kingdom, phylum, class, order, family) %>%
                  distinct()
     
+    # Whenever the filter rank changes, updates the list of name possibilities
     observeEvent(input$filter.rank, {
         updateSelectInput(
             session,
             inputId = 'filter.name',
             choices = .listchoices(gbifnames, input$filter.rank)
-            )
+        )
     })
         
 #-----------------------------------------------------------------------------#
@@ -44,28 +46,34 @@ function(input, output, session) {
     filtered <- eventReactive(input$analyze, {
         
         .filterdataset <- function(x) {
-            # Filters based on tax rank specified
+            # Filters based on input tax rank specified
             if (input$inp.taxlevel == 'All') {
                 txfilter <- !is.na(x$name)
             } else {
                 txfilter <- x$rank == input$inp.taxlevel
             }
             
-            # Filters based on kingdom specified
-            if (input$inp.kingdom == 'All') {
-                kfilter <- !is.na(x$name)
+            # # Filters based on kingdom specified
+            # if (input$inp.kingdom == 'All') {
+            #     kfilter <- !is.na(x$name)
+            # } else {
+            #     kfilter <- x$kingdom == input$inp.kingdom
+            # }
+            # Filters based on output tax rank and name
+            if (input$filter.name == 'All') {
+                nfilter <- !is.na(x$name)
             } else {
-                kfilter <- x$kingdom == input$inp.kingdom
+                nfilter <- x[,input$filter.rank] == input$filter.name
             }
             
             # Filters based on name status, if present in dataset
-            if ("status" %in% colnames(x) && input$inp.nstatus != 'All') {
-                sfilter <- x$status == input$inp.nstatus
+            if ("status" %in% colnames(x) && input$filter.nstatus != 'All') {
+                sfilter <- x$status == input$filter.nstatus
             } else {
                 sfilter <- !is.na(x$name)
             }
             
-            filter(x, txfilter, kfilter, sfilter)
+            filter(x, txfilter, nfilter, sfilter)
         }
         
         list(

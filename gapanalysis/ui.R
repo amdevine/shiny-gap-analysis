@@ -61,13 +61,15 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
             ),
             column(4,
                 h2("Name Options"),
-                p('These options apply to the names submitted. e.g. If submitting a 
-                  list of all families, select', strong('family'), 'as the', 
-                  strong('Taxonomic rank of names')),
+                p("These options can be specified for the list of names being inputted."),
+                h3("Taxonomic rank of submitted names"),
+                p('Select the taxonomic rank of the names submitted. E.g. If submitting a 
+                  list of all families, select', strong('Family'), 'as the', 
+                  strong('Taxonomic rank of submitted names')),
                 selectInput(
                     # width = '200px,',
                     'inp.taxlevel', 
-                    'Taxonomic rank of names', 
+                    'Taxonomic rank of submitted names', 
                     c(
                        'Not Specified' = 'All',
                        'Kingdom' = 'kingdom',
@@ -77,21 +79,27 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                        'Family' = 'family',
                        'Genus' = 'genus'
                     )
-                ),
+                )
+            ),
+            column(4,
+                h2("Output Filtering"),
+                p("These options filter the output of the gap analysis."),
+                h3('Name Status'),
+                p("Filter results based on the GBIF name status. E.g. If you would like only results 
+                  matching accepted GBIF names, select", strong("accepted"), "from", 
+                  strong("Name status")),
                 selectInput(
                     # width = '200px',
-                    'inp.nstatus', 
+                    'filter.nstatus', 
                     'Name status', 
                     c(
                         'Not Specified' = 'All',
                         sort(unique(gbif$status))
                     )
-                )
-            ),
-            column(4,
-                h2("Taxonomic Filtering"),
+                ),
+                h3("Filter by taxonomic rank and name"),
                 p("These options allow for filtering by certain taxonomic groups. e.g. If submitting a 
-                  list of mammal families, select", strong("order"), "from", strong("Select filter rank"),
+                  list of mammal families, select", strong("Class"), "from", strong("Select filter rank"),
                   ", then select", strong("Mammalia"), "from", strong("Select filter taxonomic name")),
                 selectInput(
                     'filter.rank',
