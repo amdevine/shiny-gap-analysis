@@ -11,92 +11,30 @@ function(input, output, session) {
               sep = "", collapse = " ")
     }
     
-    # Returns a data frame filtered according to the options specified
-    filterinputoptions <- function(nameoptions, selectedtaxa) {
-        if(selectedtaxa$kin != 'All') {
-            nameoptions <- filter(nameoptions, kingdom == selectedtaxa$kin)
+    .listchoices <- function(nameoptions, filtrank) {
+        if(filtrank == 'All') {
+            return(c('None Selected' = 'All'))
+        } else {
+            return(c(
+                'None Selected' = 'All',
+                sort(unique(nameoptions[,filtrank]))
+            ))
         }
-        if(selectedtaxa$phy != 'All') {
-            nameoptions <- filter(nameoptions, phylum == selectedtaxa$phy)
-        }
-        if(selectedtaxa$cla != 'All') {
-            nameoptions <- filter(nameoptions, class == selectedtaxa$cla)
-        }
-        if(selectedtaxa$ord != 'All') {
-            nameoptions <- filter(nameoptions, order == selectedtaxa$ord)
-        }
-        if(selectedtaxa$fam != 'All') {
-            nameoptions <- filter(nameoptions, family == selectedtaxa$fam)
-        }
-        nameoptions    
     }
-    
-    # Updates the taxonomic options lists
-    updatelists <- function(filtoptions, taxfilt) {
-        print('updatelists called')
-        tf <- isolate(reactiveValuesToList(taxfilt))
-        updateSelectInput(session = session, 
-                          inputId = 'inp.kingdom',
-                          choices = c('Not Specified' = 'All',
-                                      unique(filterinputoptions(filtoptions, tf)$kingdom)),
-                          selected = tf$kin)
-        updateSelectInput(session = session, 
-                          inputId = 'inp.phylum',
-                          choices = c('Not Specified' = 'All',
-                                      unique(filterinputoptions(filtoptions, tf)$phylum)),
-                          selected = tf$phy)
-        updateSelectInput(session = session, 
-                          inputId = 'inp.class',
-                          choices = c('Not Specified' = 'All',
-                                      unique(filterinputoptions(filtoptions, tf)$class)),
-                          selected = tf$cla)
-        updateSelectInput(session = session, 
-                          inputId = 'inp.order',
-                          choices = c('Not Specified' = 'All',
-                                      unique(filterinputoptions(filtoptions, tf)$order)),
-                          selected = tf$ord)
-        updateSelectInput(session = session, 
-                          inputId = 'inp.family',
-                          choices = c('Not Specified' = 'All',
-                                      unique(filterinputoptions(filtoptions, tf)$family)),
-                          selected = tf$fam)
-    }
-    
-    
     
 #-----------------------------------------------------------------------------#
 # TAXONOMIC FILTERING
+
+    gbifnames <- gbif %>%
+                 select(kingdom, phylum, class, order, family) %>%
+                 distinct()
     
-    filtoptions <- gbif %>%
-        select(kingdom, phylum, class, order, family) %>%
-        distinct() %>%
-        arrange(kingdom, phylum, class, order, family)
-
-    taxfilt <- reactiveValues(kin = 'All', phy = 'All', cla = 'All', 
-                              ord = 'All', fam = 'All')
-
-    observeEvent(input$inp.kingdom, { 
-        print('kingdom observed')
-        taxfilt$kin <- input$inp.kingdom 
-        updatelists(filtoptions, taxfilt)
-    })
-    observeEvent(input$inp.phylum, { 
-        print('phylum observed')
-        taxfilt$phy <- input$inp.phylum
-        updatelists(filtoptions, taxfilt)
-    })
-    observeEvent(input$inp.class, { 
-        print('class observed')
-        taxfilt$cla <- input$inp.class
-        updatelists(filtoptions, taxfilt)
-    })
-    observeEvent(input$inp.order, { 
-        taxfilt$ord <- input$inp.order
-        updatelists(filtoptions, taxfilt)
-    })
-    observeEvent(input$inp.family, { 
-        taxfilt$fam <- input$inp.family
-        updatelists(filtoptions, taxfilt)
+    observeEvent(input$filter.rank, {
+        updateSelectInput(
+            session,
+            inputId = 'filter.name',
+            choices = .listchoices(gbifnames, input$filter.rank)
+            )
     })
         
 #-----------------------------------------------------------------------------#

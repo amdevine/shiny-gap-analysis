@@ -61,6 +61,9 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
             ),
             column(4,
                 h2("Name Options"),
+                p('These options apply to the names submitted. e.g. If submitting a 
+                  list of all families, select', strong('family'), 'as the', 
+                  strong('Taxonomic rank of names')),
                 selectInput(
                     # width = '200px,',
                     'inp.taxlevel', 
@@ -87,46 +90,26 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
             ),
             column(4,
                 h2("Taxonomic Filtering"),
-                p("Limit results to particular taxa"),
+                p("These options allow for filtering by certain taxonomic groups. e.g. If submitting a 
+                  list of mammal families, select", strong("order"), "from", strong("Select filter rank"),
+                  ", then select", strong("Mammalia"), "from", strong("Select filter taxonomic name")),
                 selectInput(
-                   'inp.kingdom', 
-                   'Kingdom', 
-                   c(
-                       'Not Specified' = 'All',
-                       sort(unique(gbif$kingdom))
-                   )
-                ),
-                selectInput(
-                    'inp.phylum', 
-                    'Phylum', 
+                    'filter.rank',
+                    'Select filter rank',
                     c(
                         'Not Specified' = 'All',
-                        sort(unique(gbif$phylum))
+                        'Kingdom' = 'kingdom',
+                        "Phylum/Division" = 'phylum',
+                        'Class' = 'class',
+                        'Order' = 'order',
+                        'Family' = 'family',
+                        'Genus' = 'genus'
                     )
                 ),
                 selectInput(
-                    'inp.class', 
-                    'Class', 
-                    c(
-                        'Not Specified' = 'All',
-                        sort(unique(gbif$class))
-                    )
-                ),
-                selectInput(
-                    'inp.order', 
-                    'Order', 
-                    c(
-                        'Not Specified' = 'All',
-                        sort(unique(gbif$order))
-                    )
-                ),
-                selectInput(
-                    'inp.family', 
-                    'Family', 
-                    c(
-                        'Not Specified' = 'All',
-                        sort(unique(gbif$family))
-                    )
+                    'filter.name',
+                    'Select filter taxonomic name',
+                    c('Not Specified' = 'All')
                 )
             )
         )
