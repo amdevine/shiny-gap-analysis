@@ -1,3 +1,7 @@
+## To deploy app through RStudio:
+## library(rsconnect)
+## deployApp('gapanalysis')
+
 library(dplyr, warn.conflicts = FALSE)
 library(rdrop2)
 library(shiny)

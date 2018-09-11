@@ -1,7 +1,7 @@
-function(input, output) {
+function(input, output, session) {
 
 #-----------------------------------------------------------------------------#
-# USER INPUT FIELDS 
+# FUNCTIONS
     
     # Returns string with first letter of each word capitalized
     .simpleCap <- function(x) {
@@ -11,32 +11,63 @@ function(input, output) {
               sep = "", collapse = " ")
     }
     
+    # Returns a list of taxonomic names from GBIF at a specified rank
+    .listchoices <- function(nameoptions, filtrank) {
+        if(filtrank == 'All') {
+            return(c('None Selected' = 'All'))
+        } else {
+            return(c(
+                'None Selected' = 'All',
+                sort(unique(nameoptions[,filtrank]))
+            ))
+        }
+    }
+    
+#-----------------------------------------------------------------------------#
+# TAXONOMIC FILTERING
+
+    gbifnames <- gbif %>%
+                 select(kingdom, phylum, class, order, family) %>%
+                 distinct()
+    
+    # Whenever the filter rank changes, updates the list of name possibilities
+    observeEvent(input$filter.rank, {
+        updateSelectInput(
+            session,
+            inputId = 'filter.name',
+            choices = .listchoices(gbifnames, input$filter.rank)
+        )
+    })
+        
+#-----------------------------------------------------------------------------#
+# NAME INPUT FIELDS 
+    
     # Filters GBIF, GGBN, and GenBank dataframes based on user input of Kingdom and Tax Rank
     filtered <- eventReactive(input$analyze, {
         
         .filterdataset <- function(x) {
-            # Filters based on tax rank specified
+            # Filters based on input tax rank specified
             if (input$inp.taxlevel == 'All') {
                 txfilter <- !is.na(x$name)
             } else {
                 txfilter <- x$rank == input$inp.taxlevel
             }
             
-            # Filters based on kingdom specified
-            if (input$inp.kingdom == 'All') {
-                kfilter <- !is.na(x$name)
+            # Filters output based on desired taxonomic rank and name
+            if (input$filter.name == 'All') {
+                nfilter <- !is.na(x$name)
             } else {
-                kfilter <- x$kingdom == input$inp.kingdom
+                nfilter <- x[,input$filter.rank] == input$filter.name
             }
             
             # Filters based on name status, if present in dataset
-            if ("status" %in% colnames(x) && input$inp.nstatus != 'All') {
-                sfilter <- x$status == input$inp.nstatus
+            if ("status" %in% colnames(x) && input$filter.nstatus != 'All') {
+                sfilter <- x$status == input$filter.nstatus
             } else {
                 sfilter <- !is.na(x$name)
             }
             
-            filter(x, txfilter, kfilter, sfilter)
+            filter(x, txfilter, nfilter, sfilter)
         }
         
         list(
@@ -204,57 +235,6 @@ function(input, output) {
         }
     })
     
-    
-#-----------------------------------------------------------------------------#
-# DYNAMIC SUMMARY AND RESULTS TABS
-    
-    # Appends Summary tab containing summary of results
-    observeEvent(input$analyze, {
-        removeTab(inputId = 'resultstabs',
-                  target = 'Summary')
-        insertTab(inputId = 'resultstabs', 
-                  tabPanel("Summary",
-                           tableOutput('summary.table')),
-                  target = 'Instructions',
-                  position = 'after'
-    )})
-        
-    # Appends Results Table tab containing results table
-    observeEvent(input$analyze, {
-        removeTab(inputId = 'resultstabs',
-                  target = 'Results Table')
-        insertTab(inputId = 'resultstabs',
-                  tabPanel("Results Table", 
-                           div(tableOutput('results.table'), style = "font-size:80%")),
-                  target = 'Summary',
-                  position = 'after',
-                  select = TRUE
-        )
-    })
-    
-    # Appends Downloads tab containing buttons to download summary and results
-    observeEvent(input$analyze, {
-        removeTab(inputId = 'resultstabs',
-                  target = 'Download Results')
-        insertTab(inputId = 'resultstabs',
-                  tabPanel("Download Results",
-                           downloadButton('dl.all.xlsx',
-                                          'Download All Results (.xlsx)',
-                                          style = "margin-bottom:1em;margin-top:1em"),
-                           downloadButton('dl.summary.tsv', 
-                                          'Download Summary Table (.tsv)', 
-                                          style = "margin-bottom:1em;margin-top:1em"),
-                           downloadButton('dl.table.tsv', 
-                                          'Download Results Table (.tsv)', 
-                                          style = "margin-bottom:1em;margin-top:1em")
-                           
-                           ),
-                  target = 'Results Table',
-                  position = 'after'
-                  
-    )})
-    
-
 #-----------------------------------------------------------------------------#
 # DOWNLOAD BUTTONS
     
