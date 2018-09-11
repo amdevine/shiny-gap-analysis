@@ -53,13 +53,7 @@ function(input, output, session) {
                 txfilter <- x$rank == input$inp.taxlevel
             }
             
-            # # Filters based on kingdom specified
-            # if (input$inp.kingdom == 'All') {
-            #     kfilter <- !is.na(x$name)
-            # } else {
-            #     kfilter <- x$kingdom == input$inp.kingdom
-            # }
-            # Filters based on output tax rank and name
+            # Filters output based on desired taxonomic rank and name
             if (input$filter.name == 'All') {
                 nfilter <- !is.na(x$name)
             } else {
