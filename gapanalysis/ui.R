@@ -149,7 +149,7 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
     
     tabPanel(id = "table", title = "Results Table",
         h2("Results Table"),
-                 div(tableOutput('results.table'), style = "font-size:80%")),
+        div(tableOutput('results.table'), style = "font-size:80%")),
     
     tabPanel(id = "download", title = "Download Results",
         h2("Download Results"),
@@ -161,6 +161,10 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                        style = "margin-bottom:1em;margin-top:1em"),
         downloadButton('dl.table.tsv', 
                        'Download Results Table (.tsv)', 
-                       style = "margin-bottom:1em;margin-top:1em"))
+                       style = "margin-bottom:1em;margin-top:1em")),
+    
+    tabPanel(id = "about", title = "About",
+        h2("About The Gap Analysis Tool"),
+        includeMarkdown("docs/about.md"))
 
 )
