@@ -1,51 +1,6 @@
 navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
 
-    # tabPanel(id = 'instructions', title = "Instructions",
-    #     h1("Instructions"),
-    #     p(strong("Note: This gap analysis calculator only works on taxonomic names at
-    #         the kingdom, phylum/division, class, order, family, or genus level. 
-    #              Species are not supported.")),
-    #     h2("Input"),
-    #     p('This tab contains fields to input taxonomic names and specify name options and filtering options.'),
-    #     p(strong("Dataset label:"), 
-    #         "Enter the name of analysis. e.g. \'NMNH Amphibians\'"),
-    #     p(strong("Upload list of names:"), 
-    #         "Allows text (.txt) file containing a list of names to be upload for analysis. 
-    #         Please format text file with one name per line."),
-    #     p(strong("Enter list of names:"), 
-    #         "Alternatively, enter a list of names to be analyzed.
-    #         Please enter one name per line."),
-    #     p(strong("Taxonomic rank of names:"), 
-    #         "If all names are the same taxonomic rank (e.g. Family, Genus),
-    #         select the appropriate rank. This may reduce the number of
-    #         extraneous results returned from incorrect ranks."),
-    #     p(strong("Kingdom of names:"), 
-    #         "If all names are the found in the same kingdom (e.g. Animalia, Plantae), 
-    #         select the appropriate kingdom. This may reduce the number of 
-    #         extraneous results from homonymous names."),
-    #     p(strong("Name status:"), 
-    #         "Filter results based on the status of the names returned. e.g. Selecting 
-    #         \'accepted\' will include results only for accepted names that match the 
-    #         input names, and will not return any matching synonyms or unaccepted name 
-    #         alternatives."),
-    #     h2("Results"),
-    #     p("Submitted names are queried in static inventory lists from GBIF, GGBN,
-    #         and GenBank. Names are first matched to GBIF, which returns the taxonomic
-    #         rank, name status, and if the name is not accepted, the accepted name.
-    #         Then the accepted name is queried in GGBN and GenBank, which returns whether 
-    #         that name is found in those databases. The taxonomic hierarchy is provided 
-    #         for each name to allow the user to verify that the correct name has been queried."),
-    #     p(strong("Summary:"),
-    #         "A summary of the names entered, and how many were found to be in GBIF,
-    #         GGBN, and GenBank. The \'Download Summary Table\' button allows the user to 
-    #         download the counts for each taxonomic rank as a tab-delimited .tsv file."),
-    #     p(strong("Results Table:"),
-    #         "Returns a table containing results of the first 100 names submitted. 
-    #         The \'Download Results Table\' button allows the user to download the results 
-    #         for all submitted names as a tab-delimited .tsv file.")
-    # ),
-    
-    tabPanel(id = "inp", title = "Input",
+    tabPanel(id = "inp", title = "Input", value = "inp",
         fluidRow(
             column(4,
                 h2("Input Names"),
@@ -143,15 +98,15 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
         )
     ),
     
-    tabPanel(id = "summary", title = "Results Summary",
+    tabPanel(id = "summary", title = "Results Summary", value = "summary",
              h2('Results Summary'),
              tableOutput('summary.table')),
     
-    tabPanel(id = "table", title = "Results Table",
+    tabPanel(id = "table", title = "Results Table", value = "table",
         h2("Results Table"),
         div(tableOutput('results.table'), style = "font-size:80%")),
     
-    tabPanel(id = "download", title = "Download Results",
+    tabPanel(id = "download", title = "Download Results", value = "download",
         h2("Download Results"),
         downloadButton('dl.all.xlsx',
                        'Download All Results (.xlsx)',
@@ -163,7 +118,7 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                        'Download Results Table (.tsv)', 
                        style = "margin-bottom:1em;margin-top:1em")),
     
-    tabPanel(id = "about", title = "About",
+    tabPanel(id = "about", title = "About", value = "about",
         h2("About The Gap Analysis Tool"),
         includeMarkdown("docs/about.md"))
 

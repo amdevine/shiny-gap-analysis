@@ -1,5 +1,5 @@
 function(input, output, session) {
-
+    
 #-----------------------------------------------------------------------------#
 # FUNCTIONS
     
@@ -234,7 +234,16 @@ function(input, output, session) {
             return(results.df.table())
         }
     })
+
+#-----------------------------------------------------------------------------#
+# RUN ANALYSIS BUTTON
     
+    observeEvent(input$analyze, {
+        updateNavbarPage(session, "tabs",
+                         selected = "table")
+    })
+
+     
 #-----------------------------------------------------------------------------#
 # DOWNLOAD BUTTONS
     

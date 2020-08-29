@@ -17,10 +17,6 @@ p {
 }
 
 .analyzebutton {
-    border-style: solid;
-    border-width: 2px;
-    border-color: #ffb733;
-    border-radius: 3px;
     padding: 0px 20px 0px 20px;
     margin-bottom: 10px;
 }
