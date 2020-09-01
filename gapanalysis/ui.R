@@ -148,8 +148,13 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                        style = "margin-bottom:1em;margin-top:1em")),
     
     # About tab
-    tabPanel(id = "about", title = "About", value = "about",
-        h2("About The Gap Analysis Tool"),
+    tabPanel(id = "about", 
+             title = "Application Info and Source Data Files", 
+             value = "about",
+        includeMarkdown("docs/sourcedata.md"),
+        p(paste("GGBN genetic samples:", ggbn_date)),
+        p(paste("GenBank DNA barcodes:", genbank_date)),
+        p(paste("GBIF taxonomic backbone:",gbif_date)),
         includeMarkdown("docs/about.md"))
 
 )
