@@ -129,12 +129,16 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
     
     # Summary tab
     tabPanel(id = "summary", title = "Results Summary", value = "summary",
-             h2('Results Summary'),
-             tableOutput('summary.table')),
+        h2('Results Summary'),
+        includeMarkdown('docs/summarytable.md'),
+        hr(),
+        tableOutput('summary.table')),
     
     # Results table tab
     tabPanel(id = "table", title = "Results Table", value = "table",
         h2("Results Table"),
+        p("Displaying the first 100 results.", 
+          "For the complete results, please use the Download Results tab."),
         div(tableOutput('results.table'), style = "font-size:80%")),
     
     # Download tab
