@@ -193,13 +193,15 @@ function(input, output, session) {
     # Creates summary table for display and download
     summary.df.table <- reactive({
         rank.order <- c('kingdom', 'phylum', 'class', 'order', 'family', 'genus')
-        select(summary.df(),
-               'Rank' = rank,
-               'Total' = total,
-               'New to GGBN' = total_new_to_ggbn,
-               'New to GenBank' = total_new_to_genbank,
-               'New to Both GGBN and GenBank' = new_to_both,
-               'Already in Both GGBN and GenBank' = new_to_neither)
+        summary.df() %>%
+            select('Rank' = rank,
+                   'Total' = total,
+                   'New to GGBN' = total_new_to_ggbn,
+                   'New to GenBank' = total_new_to_genbank,
+                   'New to Both GGBN and GenBank' = new_to_both,
+                   'Already in Both GGBN and GenBank' = new_to_neither) %>%
+            mutate(Rank = factor(Rank, levels = rank.order)) %>%
+            arrange(Rank)
     })
     
     # Adds summary display table to output
