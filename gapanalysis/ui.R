@@ -49,11 +49,11 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                 
                 # Taxonomic rank dropdown 
                 h3("Taxonomic rank of submitted names"),
-                p(tags$small('Select the taxonomic rank of the names submitted. E.g. If submitting a 
-                  list of all families, select', strong('Family'), 'as the', 
-                  strong('Taxonomic rank of submitted names'))),
+                p(tags$small("Select the taxonomic rank of the names submitted.",
+                             "E.g. If submitting a list of all families, select", 
+                             strong('Family'), 'as the', 
+                             strong('Taxonomic rank of submitted names'))),
                 selectInput(
-                    # width = '200px,',
                     'inp.taxlevel', 
                     'Taxonomic rank of submitted names', 
                     c(
@@ -68,10 +68,11 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                 ),
                 hr(),
                 
-                # Name analysis
-                h3("Analysis name"),
+                # Name of analysis
+                h3("Name of analysis"),
                 p(tags$small("This name is used to name the download files.")),
-                textInput('list.name', 'Analysis name', value = "Gap Analysis")
+                textInput('list.name', 'Analysis name', 
+                          value = as.character(Sys.Date()))
             ),
             
             # Output filtering column
@@ -84,9 +85,10 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                 
                 # Name status dropdown
                 h3('Filter by names status'),
-                p(tags$small("Filter results based on the GBIF name status. E.g. To receive only the results 
-                  matching accepted GBIF names, select", strong("accepted"), "from", 
-                  strong("Name status"))),
+                p(tags$small("Filter results based on the GBIF name status.", 
+                             "E.g. To receive only the results matching,", 
+                             "accepted GBIF names, select", strong("accepted"), 
+                             "from", strong("Name status"))),
                 selectInput(
                     # width = '200px',
                     'filter.nstatus', 
@@ -100,9 +102,10 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                 
                 # Taxon filter autocomplete
                 h3("Filter by taxon"),
-                p(tags$small("These options allow for filtering by a specified taxonomic groups. e.g. If submitting a 
-                  list of mammal families, select", strong("Class"), "from", strong("Select filter rank"),
-                  ", then select", strong("Mammalia"), "from", strong("Select filter taxonomic name"))),
+                p(tags$small("These options allow for filtering by a specified taxonomic groups.", 
+                             "E.g. If submitting a list of mammal families, select", strong("Class"), 
+                             "from", strong("Select filter rank"), ", then select", strong("Mammalia"), 
+                             "from", strong("Select filter taxonomic name"))),
                 selectInput(
                     'filter.rank',
                     'Select filter rank',
