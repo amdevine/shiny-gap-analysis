@@ -30,18 +30,25 @@ update_date <- function(file_info, file_name){
     return(last_updated(d))
 }
 
-# Read files locally - FOR USE DURING DEVELOPMENT
-# gbif <- read.csv('../gbif.csv', stringsAsFactors = FALSE)
-# ggbn <- read.csv('../ggbn.csv', stringsAsFactors = FALSE)
-# genbank <- read.csv('../genbank.csv', stringsAsFactors = FALSE)
+development <- FALSE
 
-# Read files from Dropbox - FOR USE ON LIVE SITE
-gbif <- drop_read_csv('shiny/gbif.csv', dtoken = token, 
-                      stringsAsFactors = FALSE)
-ggbn <- drop_read_csv('shiny/ggbn.csv', dtoken = token, 
-                      stringsAsFactors = FALSE)
-genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token, 
-                         stringsAsFactors = FALSE)
+if (development) {
+    
+    # Read files locally - FOR USE DURING DEVELOPMENT
+    gbif <- read.csv('../gbif.csv', stringsAsFactors = FALSE)
+    ggbn <- read.csv('../ggbn.csv', stringsAsFactors = FALSE)
+    genbank <- read.csv('../genbank.csv', stringsAsFactors = FALSE)
+    
+} else if (!development) {
+    
+    # Read files from Dropbox - FOR USE ON LIVE SITE
+    gbif <- drop_read_csv('shiny/gbif.csv', dtoken = token,
+                          stringsAsFactors = FALSE)
+    ggbn <- drop_read_csv('shiny/ggbn.csv', dtoken = token,
+                          stringsAsFactors = FALSE)
+    genbank <- drop_read_csv('shiny/genbank.csv', dtoken = token,
+                             stringsAsFactors = FALSE)
+}
 
 # Read update dates for files
 file_info <- drop_dir('shiny')
