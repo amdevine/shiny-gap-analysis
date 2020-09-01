@@ -1,17 +1,26 @@
 navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
 
+    # Input tab
     tabPanel(id = "inp", title = "Input", value = "inp",
         fluidRow(
+            
+            # Inputs column
             column(4,
+                
+                # Input names information
                 h2("Input Names"),
                 p(tags$small('Names can be uploaded in a file or pasted directly into the text box.')),
                 p(tags$small('Only names at the kingdom, phylum/division, class, order, family, or genus rank 
                          can be analyzed.', strong('This tool does not work on species names.'))),
                 hr(),
+                
+                # Upload name file
                 h3('Upload name file'),
                 p(tags$small('Upload a .txt file containing one name per line.')),
                 fileInput('inp.name.file', 'Names file (.txt)'),
                 hr(),
+                
+                # Paste names in text box
                 h3('Paste list of names'),
                 p(tags$small('Paste a list of names directly into this text box. Please enter one name per row.')),
                 textAreaInput(
@@ -21,17 +30,24 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                    # width = '150px',
                    height = '100px'
                 ),
-                tags$div(class = 'analyzebutton',
-                    h2("Run Analysis"),
-                    actionButton('analyze', 'Run Analysis'),
-                    p(tags$small('After clicking Run Analysis, manually click on 
-                                 Results Summary of Results Table to view results.'))
-                )
+                hr(),
+                
+                # Analyze names button
+                h2("Run Analysis"),
+                actionButton('analyze', 'Run Analysis'),
+                p(tags$small('After clicking Run Analysis, you will automatically
+                             be redirected to the Results Table tab.'))
             ),
+            
+            # Name options column
             column(4,
+                   
+                # Name options info
                 h2("Name Options"),
                 p(tags$small("These options can be specified for the list of input names.")),
                 hr(),
+                
+                # Taxonomic rank dropdown 
                 h3("Taxonomic rank of submitted names"),
                 p(tags$small('Select the taxonomic rank of the names submitted. E.g. If submitting a 
                   list of all families, select', strong('Family'), 'as the', 
@@ -51,14 +67,22 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                     )
                 ),
                 hr(),
-                h3("Dataset label"),
-                p(tags$small("This label is used to name the download files.")),
-                textInput('list.name', 'Dataset label', value = "User Data")
+                
+                # Name analysis
+                h3("Analysis name"),
+                p(tags$small("This name is used to name the download files.")),
+                textInput('list.name', 'Analysis name', value = "Gap Analysis")
             ),
+            
+            # Output filtering column
             column(4,
+                   
+                # Output filtering info
                 h2("Output Filtering"),
                 p(tags$small("These options filter the output of the gap analysis.")),
                 hr(),
+                
+                # Name status dropdown
                 h3('Filter by names status'),
                 p(tags$small("Filter results based on the GBIF name status. E.g. To receive only the results 
                   matching accepted GBIF names, select", strong("accepted"), "from", 
@@ -73,6 +97,8 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                     )
                 ),
                 hr(),
+                
+                # Taxon filter autocomplete
                 h3("Filter by taxon"),
                 p(tags$small("These options allow for filtering by a specified taxonomic groups. e.g. If submitting a 
                   list of mammal families, select", strong("Class"), "from", strong("Select filter rank"),
@@ -98,14 +124,17 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
         )
     ),
     
+    # Summary tab
     tabPanel(id = "summary", title = "Results Summary", value = "summary",
              h2('Results Summary'),
              tableOutput('summary.table')),
     
+    # Results table tab
     tabPanel(id = "table", title = "Results Table", value = "table",
         h2("Results Table"),
         div(tableOutput('results.table'), style = "font-size:80%")),
     
+    # Download tab
     tabPanel(id = "download", title = "Download Results", value = "download",
         h2("Download Results"),
         downloadButton('dl.all.xlsx',
@@ -118,6 +147,7 @@ navbarPage("GGI Gap Analysis Tool", theme = 'style.css', id = 'tabs',
                        'Download Results Table (.tsv)', 
                        style = "margin-bottom:1em;margin-top:1em")),
     
+    # About tab
     tabPanel(id = "about", title = "About", value = "about",
         h2("About The Gap Analysis Tool"),
         includeMarkdown("docs/about.md"))
