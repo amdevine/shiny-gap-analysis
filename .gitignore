@@ -9,4 +9,5 @@ ggbn.csv
 genbank.csv
 .httr-oauth
 *dropbox_token.rds
+*dropbox_token_2.rds
 gapanalysis/rsconnect/

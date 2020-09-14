@@ -3,14 +3,16 @@
 ## deployApp('gapanalysis')
 
 # Import packages 
-suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(suppressWarnings(library(tidyverse)))
+suppressPackageStartupMessages(suppressWarnings(library(lubridate)))
 library(rdrop2)
 library(shiny)
 library(openxlsx)
 library(markdown)
 
 # Read token to connect to source data Dropbox account
-token <- readRDS('dropbox_token.rds')
+# token <- readRDS('dropbox_token_2.rds')
+token <- drop_auth(rdstoken = 'dropbox_token_2.rds')
 
 # Function that returns date the files were last modified
 update_date <- function(file_info, file_name){
